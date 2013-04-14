@@ -8,7 +8,8 @@ goxgui is a Qt front end for [prof7bit's goxtool](http://prof7bit.github.io/goxt
 
 ![Screenshot](https://raw.github.com/sebastianhaberey/goxgui/master/screenshot.png)
 
-goxgui currently has the following features:
+Features
+--------
 
 * Display asks / bids
 * Display MtGox account balance (USD/BTC)
@@ -20,10 +21,10 @@ Prerequisites
 
 I have tested the application on **OSX 10.7.5** and **Windows XP** within the following confguration. Other setups may or may not work.
 
-- Python 2.7.3
-- Qt 4.8.2
-- PyQt (matching the above Python / Qt versions)
-- pycrypto 2.6
+* Python 2.7.3
+* Qt 4.8.2
+* PyQt (matching the above Python / Qt versions)
+* pycrypto 2.6
 
 goxtool will be installed with goxgui, so you don't need to install it manually.
 
