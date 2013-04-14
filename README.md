@@ -28,7 +28,7 @@ I have tested the application on **OSX 10.7.5** and **Windows XP** within the fo
 Installation
 ------------
 
-    git clone --recursive git@github.com:sebastianhaberey/goxgui.git
+    git clone --recursive git://github.com/sebastianhaberey/goxgui.git
     cd goxgui/run
     chmod 755 ./start.sh
     ./start.sh
