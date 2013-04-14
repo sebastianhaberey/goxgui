@@ -187,7 +187,7 @@ class View(QMainWindow):
         self.gox.config.set("gox", "secret_key", key)
         self.gox.config.set("gox", "secret_secret", secret)
         self.gox.config.save()
-        self.status_message("Credentials saved.")
+        self.status_message("Credentials changed. Please restart application.")
 
     def load_credentials(self):
         '''
