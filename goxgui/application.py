@@ -42,7 +42,6 @@ class Application(QApplication):
         QApplication.__init__(self, *args)
 
         # initialize model (gox)
-        goxapi.FORCE_PROTOCOL = 'socketio-beta'
         self.config = goxapi.GoxConfig("goxtool.ini")
         self.secret = goxapi.Secret(self.config)
         self.gox = goxapi.Gox(self.secret, self.config)
