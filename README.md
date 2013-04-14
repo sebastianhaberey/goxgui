@@ -25,8 +25,12 @@ I have tested the application on **OSX 10.7.5** and **Windows XP** within the fo
 - PyQt (matching the above Python / Qt versions)
 - pycrypto 2.6
 
+goxtool will be installed with goxgui, so you don't need to install it manually.
+
 Installation
 ------------
+
+Please note: **you must make sure all prerequisites are installed**, otherwise the application will not work.
 
     git clone --recursive git://github.com/sebastianhaberey/goxgui.git
     cd goxgui/run
