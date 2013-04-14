@@ -38,6 +38,11 @@ Please note: **you must make sure all prerequisites are installed**, otherwise t
     chmod 755 ./start.sh
     ./start.sh
 
+Requests
+--------
+
+Bugs and feature requests can be posted in [the goxgui thread on bitcointalk.org](https://bitcointalk.org/index.php?topic=176489.0).
+
 Disclaimer
 ----------
 
