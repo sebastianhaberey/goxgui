@@ -43,6 +43,11 @@ Requests
 
 Bugs and feature requests can be posted in [the goxgui thread on bitcointalk.org](https://bitcointalk.org/index.php?topic=176489.0).
 
+Donations
+---------
+
+Bitcoin: 1QAbFdV6KDqMsFG9bjmeeBYCQzymXpsifc
+
 Disclaimer
 ----------
 
