@@ -35,8 +35,8 @@ Please note: **you must make sure all prerequisites are installed**, otherwise t
 
     git clone --recursive git://github.com/sebastianhaberey/goxgui.git
     cd goxgui/run
-    chmod 755 ./start_linux.sh # or start_mac.sh, start_win.bat
-    ./start.sh
+    chmod 755 ./start_linux.sh
+    ./start.sh # or start_mac.sh, start_win.bat
 
 Requests
 --------
