@@ -46,7 +46,7 @@ Bugs and feature requests can be posted in [the goxgui thread on bitcointalk.org
 Donations
 ---------
 
-Bitcoin: 1QAbFdV6KDqMsFG9bjmeeBYCQzymXpsifc
+1QAbFdV6KDqMsFG9bjmeeBYCQzymXpsifc (Bitcoin)
 
 Disclaimer
 ----------
