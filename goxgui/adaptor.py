@@ -10,7 +10,7 @@ class Adaptor(QObject):
     signal_log = pyqtSignal(str)
     signal_wallet = pyqtSignal()
     signal_orderlag = pyqtSignal('long long', str)
-    signal_userorder = pyqtSignal('long long', 'long', str, str, str)
+    signal_userorder = pyqtSignal('long long', 'long long', str, str, str)
 
     def __init__(self, gox):
         QObject.__init__(self)
