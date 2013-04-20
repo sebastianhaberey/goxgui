@@ -101,7 +101,8 @@ class View(QMainWindow):
         return '{}.{:0>3} {}'.format(time.strftime('%X'), millis, text)
 
     def log_to_file(self, text):
-        self.logfile.write('{}{}'.format(text, os.linesep))
+        if not self.logfile.closed:
+            self.logfile.write('{}{}'.format(text, os.linesep))
 
     def status_message(self, text):
         # call move cursor before append to work around link clicking bug
