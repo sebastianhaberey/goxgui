@@ -97,11 +97,11 @@ class Model(QAbstractTableModel):
         col = index.column()
 
         if col == 0:
-            return QVariant(utilities.internal2str(self.get_price(row)))
+            return QVariant(utilities.internal2str(self.get_price(row), 5))
         if col == 1:
             return QVariant(utilities.internal2str(self.get_size(row)))
         if col == 2:
-            return QVariant(utilities.internal2str(self.get_total(row), 5))
+            return QVariant(utilities.internal2str(self.get_total(row)))
 
     def headerData(self, col, orientation, role):
         if orientation == Qt.Horizontal and role == Qt.DisplayRole:

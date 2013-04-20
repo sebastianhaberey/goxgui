@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file '/Users/user/git/goxgui/goxgui/ui/main_window.ui'
 #
-# Created: Sat Apr 20 16:18:54 2013
+# Created: Sat Apr 20 17:34:36 2013
 #      by: PyQt4 UI code generator 4.9.4
 #
 # WARNING! All changes made in this file will be lost!
@@ -37,7 +37,6 @@ class Ui_MainWindow(object):
         self.groupBoxAccount.setFlat(True)
         self.groupBoxAccount.setObjectName(_fromUtf8("groupBoxAccount"))
         self.horizontalLayout = QtGui.QHBoxLayout(self.groupBoxAccount)
-        self.horizontalLayout.setContentsMargins(-1, 20, -1, -1)
         self.horizontalLayout.setObjectName(_fromUtf8("horizontalLayout"))
         self.tabWidget = QtGui.QTabWidget(self.groupBoxAccount)
         sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.Preferred)
@@ -161,7 +160,7 @@ class Ui_MainWindow(object):
         self.doubleSpinBoxPrice.setSizePolicy(sizePolicy)
         self.doubleSpinBoxPrice.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
         self.doubleSpinBoxPrice.setButtonSymbols(QtGui.QAbstractSpinBox.UpDownArrows)
-        self.doubleSpinBoxPrice.setDecimals(8)
+        self.doubleSpinBoxPrice.setDecimals(5)
         self.doubleSpinBoxPrice.setMaximum(9999.0)
         self.doubleSpinBoxPrice.setSingleStep(0.01)
         self.doubleSpinBoxPrice.setObjectName(_fromUtf8("doubleSpinBoxPrice"))
@@ -324,7 +323,7 @@ class Ui_MainWindow(object):
 
     def retranslateUi(self, MainWindow):
         MainWindow.setWindowTitle(QtGui.QApplication.translate("MainWindow", "MtGox Trading UI", None, QtGui.QApplication.UnicodeUTF8))
-        self.groupBoxAccount.setTitle(QtGui.QApplication.translate("MainWindow", "Account Status", None, QtGui.QApplication.UnicodeUTF8))
+        self.groupBoxAccount.setTitle(QtGui.QApplication.translate("MainWindow", "Account", None, QtGui.QApplication.UnicodeUTF8))
         self.pushButtonWalletA.setToolTip(QtGui.QApplication.translate("MainWindow", "Push to use this value", None, QtGui.QApplication.UnicodeUTF8))
         self.pushButtonWalletA.setText(QtGui.QApplication.translate("MainWindow", "BTC", None, QtGui.QApplication.UnicodeUTF8))
         self.labelOrderlag.setToolTip(QtGui.QApplication.translate("MainWindow", "MtGox trading lag (how long it takes for an order to be executed)", None, QtGui.QApplication.UnicodeUTF8))

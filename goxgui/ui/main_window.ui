@@ -378,7 +378,7 @@
             <enum>QAbstractSpinBox::UpDownArrows</enum>
            </property>
            <property name="decimals">
-            <number>8</number>
+            <number>5</number>
            </property>
            <property name="maximum">
             <double>9999.000000000000000</double>
