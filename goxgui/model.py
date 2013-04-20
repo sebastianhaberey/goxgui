@@ -11,6 +11,9 @@ class Model(QAbstractTableModel):
     Model representing a collection of orders.
     '''
 
+    # orders smaller than this value will be grouped
+    GROUP_ORDERS = 0.6
+
     def __init__(self, gox, headerdata):
         QAbstractTableModel.__init__(self)
         self.gox = gox
@@ -31,16 +34,29 @@ class Model(QAbstractTableModel):
         data_in = self._get_data_from_book(book)
         data_out = []
 
-        total_sum = 0
-
+        total = 0
+        count = 1
+        vwap = 0
+        vsize = 0
         for x in data_in:
 
-            price = utilities.gox2internal(x.price, 'USD')
-            size = utilities.gox2internal(x.volume, 'BTC')
-            total = utilities.multiply_internal(price, size)
-            total_sum += total
+            price = x.price
+            size = x.volume
 
-            data_out.append([price, size, total, total_sum])
+            vsize += size
+            vwap += price * size
+
+            total += size
+            if vsize > utilities.float2internal(self.GROUP_ORDERS):
+                vwap = utilities.gox2internal(vwap / vsize, 'USD')
+                vsize = utilities.gox2internal(vsize, 'BTC')
+                total = utilities.gox2internal(total, 'BTC')
+                data_out.append([vwap, vsize, total])
+                count = 1
+                vwap = 0
+                vsize = 0
+            else:
+                count += 1
 
         return data_out
 
@@ -60,9 +76,6 @@ class Model(QAbstractTableModel):
 
     def get_total(self, index):
         return self.__data[index][2]
-
-    def get_sum_total(self, index):
-        return self.__data[index][3]
 
     # START Qt methods
 
@@ -89,8 +102,6 @@ class Model(QAbstractTableModel):
             return QVariant(utilities.internal2str(self.get_size(row)))
         if col == 2:
             return QVariant(utilities.internal2str(self.get_total(row), 5))
-        if col == 3:
-            return QVariant(utilities.internal2str(self.get_sum_total(row), 5))
 
     def headerData(self, col, orientation, role):
         if orientation == Qt.Horizontal and role == Qt.DisplayRole:
@@ -103,7 +114,8 @@ class Model(QAbstractTableModel):
 class ModelAsk(Model):
 
     def __init__(self, gox):
-        Model.__init__(self, gox, ['Ask', 'Size', 'Total', 'Sum Total'])
+        Model.__init__(self, gox, ['Ask $', 'Size ' + utilities.BITCOIN_SYMBOL,
+            'Total ' + utilities.BITCOIN_SYMBOL])
 
     def _get_data_from_book(self, book):
         return book.asks
@@ -112,7 +124,8 @@ class ModelAsk(Model):
 class ModelBid(Model):
 
     def __init__(self, gox):
-        Model.__init__(self, gox, ['Bid', 'Size', 'Total', 'Sum Total'])
+        Model.__init__(self, gox, ['Bid $', 'Size ' + utilities.BITCOIN_SYMBOL,
+            'Total ' + utilities.BITCOIN_SYMBOL])
 
     def _get_data_from_book(self, book):
         return book.bids

@@ -16,6 +16,9 @@ FACTOR_GOX_JPY = 100000
 # factor internal representation / gox (USD)
 FACTOR_GOX_USD = 1000
 
+# this symbol will be used as bitcoin symbol
+BITCOIN_SYMBOL = unichr(3647)
+
 
 def gox2internal(value, currency):
     '''

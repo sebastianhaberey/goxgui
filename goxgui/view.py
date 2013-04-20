@@ -73,11 +73,26 @@ class View(QMainWindow):
         self.mainWindow.pushButtonTotal.released.connect(
             self.recalculate_total)
 
+        # associate log channels with their check boxes
+        self.logchannels = [
+            [self.mainWindow.checkBoxLogTicker, 'tick'],
+            [self.mainWindow.checkBoxLogTrade, 'TRADE'],
+            [self.mainWindow.checkBoxLogDepth, 'depth'],
+        ]
+
         # load credentials from configuration file
         self.load_credentials()
 
         self.show()
         self.raise_()
+
+    def restart_gox(self):
+        '''
+        Restarts gox by closing the connection
+        (recommended by prof7bit)
+        '''
+        if self.gox.client.socket:
+            self.gox.client.socket.close()
 
     def get_selected_trade_type(self):
         if self.mainWindow.radioButtonBuy.isChecked():
@@ -92,9 +107,21 @@ class View(QMainWindow):
             self.mainWindow.radioButtonSell.toggle()
 
     def log(self, text):
+
         text = self.prepend_date(text)
-        self.mainWindow.textBrowserLog.append(text)
         self.log_to_file(text)
+
+        doOutput = False
+
+        if self.mainWindow.checkBoxLogSystem.isChecked():
+            doOutput = True
+        else:
+            for entry in self.logchannels:
+                if entry[0].isChecked() and entry[1] in text:
+                    doOutput = True
+
+        if doOutput:
+            self.mainWindow.textBrowserLog.append(text)
 
     def prepend_date(self, text):
         millis = int(round(time.time() * 1000)) % 1000
@@ -188,7 +215,9 @@ class View(QMainWindow):
         self.gox.config.set("gox", "secret_key", key)
         self.gox.config.set("gox", "secret_secret", secret)
         self.gox.config.save()
-        self.status_message("Credentials changed. Please restart application.")
+        self.status_message("Credentials saved.")
+        self.load_credentials()
+        self.restart_gox()
 
     def load_credentials(self):
         '''
@@ -244,7 +273,7 @@ class View(QMainWindow):
         self.status_message('Placing order: {0} {1} BTC at {2} USD (total {3} USD)...'.format(# @IgnorePep8
             trade_name,
             utilities.internal2str(size),
-            utilities.internal2str(price),
+            utilities.internal2str(price, 5),
             utilities.internal2str(total, 5)))
 
         sizeGox = utilities.internal2gox(size, 'BTC')
@@ -288,7 +317,8 @@ class View(QMainWindow):
         else:
             self.status_message("{0} size: {1}, price: {2}, oid: <a href=\"{3}\">{3}</a> - {4}".format(# @IgnorePep8
                 str.upper(str(order_type)), size, price, oid, status))
-            self.set_order_id(oid)
+            if status == 'post-pending':
+                self.set_order_id(oid)
 
     def update_price_from_asks(self, index):
         self.set_trade_price(self.modelAsk.get_price(index.row())
