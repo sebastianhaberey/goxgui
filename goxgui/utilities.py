@@ -2,6 +2,8 @@ import base64
 import hashlib
 import binascii
 from Crypto.Cipher import AES
+import sys
+import os
 
 
 # factor internal representation / regular float
@@ -145,3 +147,17 @@ def assert_valid_key(key):
     hex_key = key.replace("-", "").encode("ascii")
     if len(binascii.unhexlify(hex_key)) != 16:
         raise Exception("key has wrong size")
+
+
+def resource_path(relative_path):
+    ''' 
+    Get absolute path to resource, works for dev and for PyInstaller.
+    Taken from: http://stackoverflow.com/questions/7674790/bundling-data-files-with-pyinstaller-onefile # @IgnorePep8
+    '''
+    try:
+        # PyInstaller creates a temp folder and stores path in _MEIPASS
+        base_path = getattr(sys, '_MEIPASS', os.getcwd())
+    except Exception:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)

@@ -9,6 +9,7 @@
 	<property name="build_main.dir" location="./build" />
 	<property name="goxgui.dir" location="${src.dir}/goxgui" />
 	<property name="goxtool.dir" location="${src.dir}/goxtool" />
+	<property name="icon.file" location="${src.dir}/run/bitcoin.png" />
 
 	<!-- ================================= 
           target: clean              
@@ -24,7 +25,7 @@
 
 		<!-- Change system-dependent paths here -->
 		<property name="python_executable.file" location="/usr/local/bin/python" />
-		<property name="pyinstaller_script.file" location="/Users/user/Anwendungen/pyinstaller-2.0/utils/Build.py" />
+		<property name="pyinstaller_script.file" location="/Users/user/Anwendungen/pyinstaller-2.0/pyinstaller.py" />
 		<!-- Change end -->
 
 		<property name="package.name" value="goxgui-${version}-macos-x64" />
@@ -71,6 +72,7 @@
 			<replacefilter token="@goxgui.dir@" value="${goxgui.dir}" />
 			<replacefilter token="@goxtool.dir@" value="${goxtool.dir}" />
 			<replacefilter token="@executable.file@" value="${executable.file}" />
+			<replacefilter token="@icon.file@" value="${icon.file}" />
 		</replace>
 		
 		<!-- dirty hack to make windows paths in the script python-compatible --> 
@@ -78,6 +80,7 @@
 
 		<exec executable="${python_executable.file}">
 			<arg value="${pyinstaller_script.file}" />
+			<arg value="--windowed" />
 			<arg value="${spec.file}" />
 		</exec>
 
@@ -85,7 +88,6 @@
 
 		<zip destfile="${package.file}">
 			<zipfileset dir="${package.dir}" filemode="755" />
-			<zipfileset dir="${src.dir}/run" includes="bitcoin.png" />
 		</zip>
 
 	</target>

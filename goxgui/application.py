@@ -23,6 +23,7 @@
 
 import goxapi
 import sys
+import utilities
 
 from PyQt4.QtGui import QIcon
 from PyQt4.QtGui import QApplication
@@ -67,5 +68,5 @@ class Application(QApplication):
 
 if __name__ == '__main__':
     app = Application(sys.argv)
-    app.setWindowIcon(QIcon('bitcoin.png'))
+    app.setWindowIcon(QIcon(utilities.resource_path('bitcoin.png')))
     app.exec_()
