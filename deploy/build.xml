@@ -4,7 +4,7 @@
 	<!-- Change version number here -->
 	<property name="version" value="1.0.0" />
 	<!-- Change end -->
-	
+
 	<property name="src.dir" location="../" />
 	<property name="build_main.dir" location="./build" />
 	<property name="goxgui.dir" location="${src.dir}/goxgui" />
@@ -26,11 +26,11 @@
 		<property name="python_executable.file" location="/usr/local/bin/python" />
 		<property name="pyinstaller_script.file" location="/Users/user/Anwendungen/pyinstaller-2.0/utils/Build.py" />
 		<!-- Change end -->
-			
+
 		<property name="package.name" value="goxgui-${version}-macos-x64" />
 		<property name="build.dir" location="${build_main.dir}/mac" />
 		<property name="package.dir" location="${build.dir}/${package.name}" />
-		<property name="spec.file" location="build_mac.spec" />
+		<property name="spec_src.file" location="build_mac.spec" />
 		<property name="executable.file" location="${package.dir}/goxgui" />
 
 		<antcall target="build" />
@@ -43,14 +43,14 @@
 	<target name="build_win" depends="clean" description="Builds the project for Windows x86">
 
 		<!-- Change system-dependent paths here -->
-		<property name="python_executable.file" location="C:\Dokumente und Einstellungen\Administrator\Eigene Dateien\Diverse\Eclipse Workspace\goxgui" />
-		<property name="pyinstaller_script.file" location="C:\Programme\tools\pyinstaller\utils\Build.py" />
+		<property name="python_executable.file" value="C:/Programme/Python/Python27/python.exe" />
+		<property name="pyinstaller_script.file" value="C:/Programme/Tools/pyinstaller-2.0/utils/Build.py" />
 		<!-- Change end -->
-			
+
 		<property name="package.name" value="goxgui-${version}-win-x86" />
 		<property name="build.dir" location="${build_main.dir}/win" />
 		<property name="package.dir" location="${build.dir}/${package.name}" />
-		<property name="spec.file" location="build_win.spec" />
+		<property name="spec_src.file" location="build_win.spec" />
 		<property name="executable.file" location="${package.dir}/goxgui.exe" />
 
 		<antcall target="build" />
@@ -63,26 +63,31 @@
 	<target name="build">
 
 		<mkdir dir="${build.dir}" />
-		<copy file="${spec.file}" tofile="${build.dir}/build.spec" verbose="true" />
 
-		<replace file="${build.dir}/build.spec">
+		<property name="spec.file" location="${build.dir}/build.spec" />
+		<copy file="${spec_src.file}" tofile="${spec.file}" verbose="true" />
+
+		<replace file="${spec.file}">
 			<replacefilter token="@goxgui.dir@" value="${goxgui.dir}" />
 			<replacefilter token="@goxtool.dir@" value="${goxtool.dir}" />
 			<replacefilter token="@executable.file@" value="${executable.file}" />
 		</replace>
 		
+		<!-- dirty hack to make windows paths in the script python-compatible --> 
+		<replaceregexp file="${spec.file}" match="\\" replace="\\\\\\\\" flags="g" />
+
 		<exec executable="${python_executable.file}">
-			<arg value="${pyinstaller_script.file}"/>
-			<arg value="${build.dir}/build.spec"/>
+			<arg value="${pyinstaller_script.file}" />
+			<arg value="${spec.file}" />
 		</exec>
-		
+
 		<property name="package.file" location="${build.dir}/${package.name}.zip" />
-		
+
 		<zip destfile="${package.file}">
-			<zipfileset dir="${package.dir}" filemode="755"/>
-			<zipfileset dir="${src.dir}/run" includes="bitcoin.png"/>
+			<zipfileset dir="${package.dir}" filemode="755" />
+			<zipfileset dir="${src.dir}/run" includes="bitcoin.png" />
 		</zip>
-		
+
 	</target>
 
 </project>
