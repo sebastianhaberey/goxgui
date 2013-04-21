@@ -115,10 +115,10 @@ class View(QMainWindow):
 
         if self.mainWindow.checkBoxLogSystem.isChecked():
             doOutput = True
-        else:
-            for entry in self.logchannels:
-                if entry[0].isChecked() and entry[1] in text:
-                    doOutput = True
+
+        for entry in self.logchannels:
+            if entry[1] in text:
+                doOutput = entry[0].isChecked()
 
         if doOutput:
             self.mainWindow.textBrowserLog.append(text)
