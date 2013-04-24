@@ -15,10 +15,10 @@ class View(QMainWindow):
     '''
 
     # how the application-proposed bid will differ from the selected bid
-    ADD_TO_BID = 1
+    ADD_TO_BID = 1000
 
     # how the application-proposed ask will differ from the selected ask
-    SUB_FROM_ASK = 1
+    SUB_FROM_ASK = 1000
 
     PASSPHRASE = 'fffuuuuuuu'
 
