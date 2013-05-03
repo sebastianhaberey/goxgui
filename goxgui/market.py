@@ -25,6 +25,7 @@ class Market(QObject):
     def __create_gox(self):
 
         goxapi.FORCE_PROTOCOL = 'websocket'
+        goxapi.FORCE_HTTP_API = 'True'
 
         config = goxapi.GoxConfig("goxtool.ini")
         secret = goxapi.Secret(config)
