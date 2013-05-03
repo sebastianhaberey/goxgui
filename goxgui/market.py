@@ -3,6 +3,7 @@ from PyQt4.QtCore import pyqtSignal
 import goxapi
 import utilities
 import time
+import logging
 
 
 class Market(QObject):
@@ -17,10 +18,11 @@ class Market(QObject):
     signal_userorder = pyqtSignal('long long', 'long long', str, str, str)
     signal_orderbook_changed = pyqtSignal(object)
 
-    def __init__(self):
+    def __init__(self, preferences):
         QObject.__init__(self)
         self.__key = ''
         self.__secret = ''
+        self.__preferences = preferences
 
     def __create_gox(self):
 
@@ -29,8 +31,8 @@ class Market(QObject):
 
         config = goxapi.GoxConfig("goxtool.ini")
         secret = goxapi.Secret(config)
-        secret.key = self.__key
-        secret.secret = self.__secret
+        secret.key = self.__preferences.get_key()
+        secret.secret = self.__preferences.get_secret()
         gox = goxapi.Gox(secret, config)
 
         gox.signal_debug.connect(self.slot_log)
@@ -56,18 +58,6 @@ class Market(QObject):
         self.signal_wallet.emit()
 
     # end slots
-
-    def set_key(self, key):
-        '''
-        Sets the authentification __key
-        '''
-        self.__key = key
-
-    def set_secret(self, secret):
-        '''
-        Sets the authentification __secret
-        '''
-        self.__secret = secret
 
     def start(self):
         '''

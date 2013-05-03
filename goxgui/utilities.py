@@ -149,6 +149,16 @@ def assert_valid_key(key):
         raise Exception("key has wrong size")
 
 
+def assert_valid_secret(secret):
+    '''
+    Asserts that the specified secret is valid,
+    throws an exception otherwise.
+    '''
+    result = decrypt(encrypt(secret, 'foo'), 'foo')
+    if result != secret:
+        raise Exception('encryption / decryption test failed.')
+
+
 def resource_path(relative_path):
     '''
     Get absolute path to resource, works for dev and for PyInstaller.

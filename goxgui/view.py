@@ -1,11 +1,12 @@
+import utilities
+import time
+import logging
+
 from PyQt4.QtGui import QMainWindow
 from PyQt4.QtGui import QTextCursor
 from ui.main_window_ import Ui_MainWindow
 from model import ModelAsk
 from model import ModelBid
-import utilities
-import time
-import logging
 
 
 class View(QMainWindow):
@@ -21,92 +22,86 @@ class View(QMainWindow):
 
     def __init__(self, preferences, market):
 
+        QMainWindow.__init__(self)
+
         self.preferences = preferences
         self.market = market
 
-        QMainWindow.__init__(self)
+        # set up main window
+        self.ui = Ui_MainWindow()
+        self.ui.setupUi(self)
 
-        # setup UI
-        self.mainWindow = Ui_MainWindow()
-        self.mainWindow.setupUi(self)
-
-        # connect to market signals
+        # connect market signals to our logic
         self.market.signal_log.connect(self.slot_log)
         self.market.signal_wallet.connect(self.display_wallet)
         self.market.signal_orderlag.connect(self.display_orderlag)
         self.market.signal_userorder.connect(self.display_userorder)
 
+        # connect ui signals to our logic
+        self.ui.pushButtonGo.released.connect(
+            self.execute_trade)
+        self.ui.tableAsk.clicked.connect(
+            self.update_price_from_asks)
+        self.ui.tableBid.clicked.connect(
+            self.update_price_from_bids)
+        self.ui.pushButtonCancel.released.connect(
+            self.cancel_order)
+        self.ui.textBrowserStatus.anchorClicked.connect(
+            self.order_selected)
+        self.ui.pushButtonWalletA.released.connect(
+            self.set_trade_size_from_wallet)
+        self.ui.pushButtonWalletB.released.connect(
+            self.set_trade_total_from_wallet)
+        self.ui.pushButtonSize.released.connect(
+            self.recalculate_size)
+        self.ui.pushButtonPrice.released.connect(
+            self.update_price_best)
+        self.ui.pushButtonTotal.released.connect(
+            self.recalculate_total)
+        self.ui.actionPreferences_2.triggered.connect(
+            self.show_preferences)
+
         # initialize and connect bid / ask table models
         self.modelAsk = ModelAsk(self.market)
-        self.mainWindow.tableAsk.setModel(self.modelAsk)
+        self.ui.tableAsk.setModel(self.modelAsk)
         self.modelBid = ModelBid(self.market)
-        self.mainWindow.tableBid.setModel(self.modelBid)
-
-        # connect signals from UI Qt components to our own slots
-        self.mainWindow.pushButtonApply.released.connect(
-            self.save_credentials)
-        self.mainWindow.pushButtonGo.released.connect(
-            self.execute_trade)
-        self.mainWindow.tableAsk.clicked.connect(
-            self.update_price_from_asks)
-        self.mainWindow.tableBid.clicked.connect(
-            self.update_price_from_bids)
-        self.mainWindow.pushButtonCancel.released.connect(
-            self.cancel_order)
-        self.mainWindow.textBrowserStatus.anchorClicked.connect(
-            self.order_selected)
-        self.mainWindow.pushButtonWalletA.released.connect(
-            self.set_trade_size_from_wallet)
-        self.mainWindow.pushButtonWalletB.released.connect(
-            self.set_trade_total_from_wallet)
-        self.mainWindow.pushButtonSize.released.connect(
-            self.recalculate_size)
-        self.mainWindow.pushButtonPrice.released.connect(
-            self.update_price_best)
-        self.mainWindow.pushButtonTotal.released.connect(
-            self.recalculate_total)
+        self.ui.tableBid.setModel(self.modelBid)
 
         # associate log channels with their check boxes
         self.logchannels = [
-            [self.mainWindow.checkBoxLogTicker, 'tick'],
-            [self.mainWindow.checkBoxLogTrade, 'TRADE'],
-            [self.mainWindow.checkBoxLogDepth, 'depth'],
+            [self.ui.checkBoxLogTicker, 'tick'],
+            [self.ui.checkBoxLogTrade, 'TRADE'],
+            [self.ui.checkBoxLogDepth, 'depth'],
         ]
-
-        # load credentials from configuration file
-        try:
-            key = self.preferences.get_key()
-            secret = self.preferences.get_secret()
-        except Exception as e:
-            logging.info('Could not restore credentials ({0}).'.format(str(e)))
-            key = ''
-            secret = ''
-
-        # show credentials in gui
-        self.mainWindow.lineEditKey.setText(key)
-        self.mainWindow.lineEditSecret.setText(secret)
-
-        # pass credentials to market
-        self.market.set_key(key)
-        self.market.set_secret(secret)
 
         # activate market
         self.market.start()
 
+        # show main window
         self.show()
         self.raise_()
 
+    def show_preferences(self):
+
+        result = self.preferences.show()
+        if result == True:
+            self.status_message('Preferences changed, restarting market.')
+            self.market.stop()
+            self.preferences.apply()
+            self.market.start()
+            self.status_message('Market restarted successfully.')
+
     def get_selected_trade_type(self):
-        if self.mainWindow.radioButtonBuy.isChecked():
+        if self.ui.radioButtonBuy.isChecked():
             return 'BUY'
         else:
             return 'SELL'
 
     def set_selected_trade_type(self, trade_type):
         if trade_type == 'BUY':
-            self.mainWindow.radioButtonBuy.toggle()
+            self.ui.radioButtonBuy.toggle()
         else:
-            self.mainWindow.radioButtonSell.toggle()
+            self.ui.radioButtonSell.toggle()
 
     def slot_log(self, text):
 
@@ -115,7 +110,7 @@ class View(QMainWindow):
 
         doOutput = False
 
-        if self.mainWindow.checkBoxLogSystem.isChecked():
+        if self.ui.checkBoxLogSystem.isChecked():
             doOutput = True
 
         for entry in self.logchannels:
@@ -123,7 +118,7 @@ class View(QMainWindow):
                 doOutput = entry[0].isChecked()
 
         if doOutput:
-            self.mainWindow.textBrowserLog.append(text)
+            self.ui.textBrowserLog.append(text)
 
     def prepend_date(self, text):
         millis = int(round(time.time() * 1000)) % 1000
@@ -134,71 +129,51 @@ class View(QMainWindow):
         # see: https://bugreports.qt-project.org/browse/QTBUG-539
         logging.info(text)
         text = self.prepend_date(text)
-        self.mainWindow.textBrowserStatus.moveCursor(QTextCursor.End)
-        self.mainWindow.textBrowserStatus.append(text)
+        self.ui.textBrowserStatus.moveCursor(QTextCursor.End)
+        self.ui.textBrowserStatus.append(text)
 
     def set_wallet_btc(self, value):
-        self.mainWindow.pushButtonWalletA.setEnabled(value > 0)
-        self.mainWindow.pushButtonWalletA.setText(
+        self.ui.pushButtonWalletA.setEnabled(value > 0)
+        self.ui.pushButtonWalletA.setText(
             'BTC: ' + utilities.internal2str(value))
 
     def set_wallet_usd(self, value):
-        self.mainWindow.pushButtonWalletB.setEnabled(value > 0)
-        self.mainWindow.pushButtonWalletB.setText(
+        self.ui.pushButtonWalletB.setEnabled(value > 0)
+        self.ui.pushButtonWalletB.setText(
             'USD: ' + utilities.internal2str(value, 5))
 
     def get_trade_size(self):
-        value = self.mainWindow.doubleSpinBoxBtc.value()
+        value = self.ui.doubleSpinBoxBtc.value()
         return utilities.float2internal(value)
 
     def set_trade_size(self, value):
         value_float = utilities.internal2float(value)
-        self.mainWindow.doubleSpinBoxBtc.setValue(value_float)
+        self.ui.doubleSpinBoxBtc.setValue(value_float)
 
     def get_trade_price(self):
-        value = self.mainWindow.doubleSpinBoxPrice.value()
+        value = self.ui.doubleSpinBoxPrice.value()
         return utilities.float2internal(value)
 
     def set_trade_price(self, value):
         value_float = utilities.internal2float(value)
-        self.mainWindow.doubleSpinBoxPrice.setValue(value_float)
+        self.ui.doubleSpinBoxPrice.setValue(value_float)
 
     def get_trade_total(self):
-        value = self.mainWindow.doubleSpinBoxTotal.value()
+        value = self.ui.doubleSpinBoxTotal.value()
         return utilities.float2internal(value)
 
     def set_trade_total(self, value):
         value_float = utilities.internal2float(value)
-        self.mainWindow.doubleSpinBoxTotal.setValue(value_float)
+        self.ui.doubleSpinBoxTotal.setValue(value_float)
 
     def get_order_id(self):
-        return str(self.mainWindow.lineEditOrder.text())
+        return str(self.ui.lineEditOrder.text())
 
     def set_order_id(self, text):
-        self.mainWindow.lineEditOrder.setText(text)
+        self.ui.lineEditOrder.setText(text)
 
     def order_selected(self, url):
         self.set_order_id(str(url.toString()))
-
-    def save_credentials(self):
-
-        # need to use str() here to convert QString
-        key = str(self.mainWindow.lineEditKey.text())
-        secret = str(self.mainWindow.lineEditSecret.text())
-
-        try:
-            self.preferences.set_key(key)
-            self.preferences.set_secret(secret)
-        except Exception as e:
-            self.status_message('Credentials not saved ({0})'.format(str(e)))
-            return
-
-        self.status_message("Credentials saved.")
-
-        self.market.stop()
-        self.market.set_key(key)
-        self.market.set_secret(secret)
-        self.market.start()
 
     def display_wallet(self):
 
@@ -218,7 +193,7 @@ class View(QMainWindow):
         self.set_selected_trade_type('BUY')
 
     def display_orderlag(self, ms, text):
-        self.mainWindow.labelOrderlag.setText('Trading Lag: ' + text)
+        self.ui.labelOrderlag.setText('Trading Lag: ' + text)
 
     def execute_trade(self):
 

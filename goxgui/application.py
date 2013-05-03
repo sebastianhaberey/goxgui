@@ -52,7 +52,7 @@ class Application(QApplication):
         preferences = Preferences()
 
         # initialize model
-        market = Market()
+        market = Market(preferences)
 
         # initialize view
         self.view = View(preferences, market)
