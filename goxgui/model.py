@@ -14,22 +14,25 @@ class Model(QAbstractTableModel):
     # orders smaller than this value will be grouped
     GROUP_ORDERS = 0.6
 
-    def __init__(self, gox, headerdata):
+    def __init__(self, market, headerdata):
         QAbstractTableModel.__init__(self)
-        self.gox = gox
-        self.gox.orderbook.signal_changed.connect(self.__slot_changed)
+        self.__market = market
+        self.__market.signal_orderbook_changed.connect(self.slot_changed)
         self.__headerdata = headerdata
         self.__data = []
 
-    def __slot_changed(self, book, dummy_data):
-        self.__data = self.__parse_data(book)
+    # start slots
+
+    def slot_changed(self, orderbook):
+        self.__data = self.__parse_data(orderbook)
         self.emit(SIGNAL("layoutChanged()"))
+
+    # end slots
 
     def __parse_data(self, book):
         '''
         Parses the incoming data from gox,
-        converts money values to our internal
-        money format
+        converts money values to our internal money format.
         '''
         data_in = self._get_data_from_book(book)
         data_out = []

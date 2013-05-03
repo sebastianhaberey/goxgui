@@ -21,7 +21,7 @@
 
 '''
 
-import goxapi
+import logging
 import sys
 import utilities
 
@@ -29,6 +29,8 @@ from PyQt4.QtGui import QIcon
 from PyQt4.QtGui import QApplication
 from PyQt4.QtCore import SIGNAL
 from view import View
+from market import Market
+from preferences import Preferences
 
 
 class Application(QApplication):
@@ -39,31 +41,26 @@ class Application(QApplication):
 
     def __init__(self, *args):
 
-        self.logfile = open('log.txt', 'w')
-
         QApplication.__init__(self, *args)
 
-        # initialize model (gox)
-        goxapi.FORCE_PROTOCOL = 'websocket'
-        self.config = goxapi.GoxConfig("goxtool.ini")
-        self.secret = goxapi.Secret(self.config)
-        self.gox = goxapi.Gox(self.secret, self.config)
+        # initialize logging
+        logging.basicConfig(filename='log.txt', level=logging.INFO,
+            format='%(asctime)s %(message)s')
+        logging.info("Starting application.")
+
+        # initialize user preferences
+        preferences = Preferences()
+
+        # initialize model
+        market = Market()
 
         # initialize view
-        self.view = View(self.gox, self.secret, self.logfile)
-
-        self.view.log('')
-        self.view.log('Starting application.')
-        self.view.log('')
-
-        # start connection to MtGox
-        self.gox.start()
+        self.view = View(preferences, market)
 
         self.connect(self, SIGNAL('lastWindowClosed()'), self.__quit)
 
     def __quit(self):
-        self.gox.stop()
-        self.logfile.close()
+        self.view.stop()
 
 
 if __name__ == '__main__':

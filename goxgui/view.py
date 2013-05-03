@@ -1,12 +1,11 @@
 from PyQt4.QtGui import QMainWindow
 from PyQt4.QtGui import QTextCursor
-from adaptor import Adaptor
 from ui.main_window_ import Ui_MainWindow
 from model import ModelAsk
 from model import ModelBid
 import utilities
 import time
-import os
+import logging
 
 
 class View(QMainWindow):
@@ -20,11 +19,10 @@ class View(QMainWindow):
     # how the application-proposed ask will differ from the selected ask
     SUB_FROM_ASK = 1000
 
-    PASSPHRASE = 'fffuuuuuuu'
+    def __init__(self, preferences, market):
 
-    def __init__(self, gox, secret, logfile):
-
-        self.logfile = logfile
+        self.preferences = preferences
+        self.market = market
 
         QMainWindow.__init__(self)
 
@@ -32,21 +30,16 @@ class View(QMainWindow):
         self.mainWindow = Ui_MainWindow()
         self.mainWindow.setupUi(self)
 
-        # setup gox objects
-        self.gox = gox
-        self.secret = secret
-
-        # connect to gox signals
-        self.adaptor = Adaptor(self.gox)
-        self.adaptor.signal_log.connect(self.log)
-        self.adaptor.signal_wallet.connect(self.display_wallet)
-        self.adaptor.signal_orderlag.connect(self.display_orderlag)
-        self.adaptor.signal_userorder.connect(self.display_userorder)
+        # connect to market signals
+        self.market.signal_log.connect(self.slot_log)
+        self.market.signal_wallet.connect(self.display_wallet)
+        self.market.signal_orderlag.connect(self.display_orderlag)
+        self.market.signal_userorder.connect(self.display_userorder)
 
         # initialize and connect bid / ask table models
-        self.modelAsk = ModelAsk(self.gox)
+        self.modelAsk = ModelAsk(self.market)
         self.mainWindow.tableAsk.setModel(self.modelAsk)
-        self.modelBid = ModelBid(self.gox)
+        self.modelBid = ModelBid(self.market)
         self.mainWindow.tableBid.setModel(self.modelBid)
 
         # connect signals from UI Qt components to our own slots
@@ -81,18 +74,27 @@ class View(QMainWindow):
         ]
 
         # load credentials from configuration file
-        self.load_credentials()
+        try:
+            key = self.preferences.get_key()
+            secret = self.preferences.get_secret()
+        except Exception as e:
+            logging.info('Could not restore credentials ({0}).'.format(str(e)))
+            key = ''
+            secret = ''
+
+        # show credentials in gui
+        self.mainWindow.lineEditKey.setText(key)
+        self.mainWindow.lineEditSecret.setText(secret)
+
+        # pass credentials to market
+        self.market.set_key(key)
+        self.market.set_secret(secret)
+
+        # activate market
+        self.market.start()
 
         self.show()
         self.raise_()
-
-    def restart_gox(self):
-        '''
-        Restarts gox by closing the connection
-        (recommended by prof7bit)
-        '''
-        if self.gox.client.socket:
-            self.gox.client.socket.close()
 
     def get_selected_trade_type(self):
         if self.mainWindow.radioButtonBuy.isChecked():
@@ -106,10 +108,10 @@ class View(QMainWindow):
         else:
             self.mainWindow.radioButtonSell.toggle()
 
-    def log(self, text):
+    def slot_log(self, text):
 
+        logging.info(text)
         text = self.prepend_date(text)
-        self.log_to_file(text)
 
         doOutput = False
 
@@ -127,17 +129,13 @@ class View(QMainWindow):
         millis = int(round(time.time() * 1000)) % 1000
         return '{}.{:0>3} {}'.format(time.strftime('%X'), millis, text)
 
-    def log_to_file(self, text):
-        if not self.logfile.closed:
-            self.logfile.write('{}{}'.format(text, os.linesep))
-
     def status_message(self, text):
         # call move cursor before append to work around link clicking bug
         # see: https://bugreports.qt-project.org/browse/QTBUG-539
-        self.mainWindow.textBrowserStatus.moveCursor(QTextCursor.End)
+        logging.info(text)
         text = self.prepend_date(text)
+        self.mainWindow.textBrowserStatus.moveCursor(QTextCursor.End)
         self.mainWindow.textBrowserStatus.append(text)
-        self.log_to_file(text)
 
     def set_wallet_btc(self, value):
         self.mainWindow.pushButtonWalletA.setEnabled(value > 0)
@@ -183,78 +181,40 @@ class View(QMainWindow):
         self.set_order_id(str(url.toString()))
 
     def save_credentials(self):
-        '''
-        Tries to encrypt the credentials entered by the user
-        and save them to the configuration file.
-        Incomplete or inplausible credentials will not be saved.
-        '''
 
-        key = str(format(self.mainWindow.lineEditKey.text()))
+        # need to use str() here to convert QString
+        key = str(self.mainWindow.lineEditKey.text())
         secret = str(self.mainWindow.lineEditSecret.text())
 
-        if key == '':
-            self.status_message("Credentials not saved (empty key).")
-            return
-
-        if secret == '':
-            self.status_message("Credentials not saved (empty secret).")
-            return
-
         try:
-            utilities.assert_valid_key(key)
-        except Exception:
-            self.status_message("Credentials not saved (invalid key).")
+            self.preferences.set_key(key)
+            self.preferences.set_secret(secret)
+        except Exception as e:
+            self.status_message('Credentials not saved ({0})'.format(str(e)))
             return
 
-        try:
-            secret = utilities.encrypt(secret, View.PASSPHRASE)
-        except Exception:
-            self.status_message("Credentials not saved (invalid secret).")
-            return
-
-        self.gox.config.set("gox", "secret_key", key)
-        self.gox.config.set("gox", "secret_secret", secret)
-        self.gox.config.save()
         self.status_message("Credentials saved.")
-        self.load_credentials()
-        self.restart_gox()
 
-    def load_credentials(self):
-        '''
-        Tries to load the credentials from the configuration file
-        and display them to the user. If the credentials in the
-        configuration file are invalid, they will not be loaded.
-        '''
-
-        key = self.gox.config.get_string("gox", "secret_key")
-        secret = self.gox.config.get_string("gox", "secret_secret")
-
-        try:
-            utilities.assert_valid_key(key)
-            secret = utilities.decrypt(secret, View.PASSPHRASE)
-        except Exception:
-            key = ''
-            secret = ''
-
-        self.secret.key = key
-        self.mainWindow.lineEditKey.setText(key)
-        self.secret.secret = secret
-        self.mainWindow.lineEditSecret.setText(secret)
+        self.market.stop()
+        self.market.set_key(key)
+        self.market.set_secret(secret)
+        self.market.start()
 
     def display_wallet(self):
+
         self.set_wallet_usd(
-            utilities.gox2internal(self.gox.wallet['USD'], 'USD'))
+            utilities.gox2internal(self.market.get_balance('USD'), 'USD'))
         self.set_wallet_btc(
-            utilities.gox2internal(self.gox.wallet['BTC'], 'BTC'))
+            utilities.gox2internal(self.market.get_balance('BTC'), 'BTC'))
 
     def set_trade_size_from_wallet(self):
         self.set_trade_size(
-            utilities.gox2internal(self.gox.wallet['BTC'], 'BTC'))
+            utilities.gox2internal(self.market.get_balance('BTC'), 'BTC'))
         self.set_selected_trade_type('SELL')
 
     def set_trade_total_from_wallet(self):
         self.set_trade_total(
-            utilities.gox2internal(self.gox.wallet['USD'], 'USD'))
+            utilities.gox2internal(self.market.get_balance('USD'), 'USD'))
         self.set_selected_trade_type('BUY')
 
     def display_orderlag(self, ms, text):
@@ -276,13 +236,10 @@ class View(QMainWindow):
             utilities.internal2str(price, 5),
             utilities.internal2str(total, 5)))
 
-        sizeGox = utilities.internal2gox(size, 'BTC')
-        priceGox = utilities.internal2gox(price, 'USD')
-
         if trade_type == 'BUY':
-            self.gox.buy(priceGox, sizeGox)
+            self.market.buy(price, size)
         else:
-            self.gox.sell(priceGox, sizeGox)
+            self.market.sell(price, size)
 
     def recalculate_size(self):
 
@@ -332,7 +289,7 @@ class View(QMainWindow):
         order_id = self.get_order_id()
         self.status_message(
             "Cancelling order <a href=\"{0}\">{0}</a>...".format(order_id))
-        self.gox.cancel(order_id)
+        self.market.cancel(order_id)
 
     def update_price_best(self):
 
@@ -345,3 +302,6 @@ class View(QMainWindow):
             price = self.modelAsk.get_price(0)
             price -= self.SUB_FROM_ASK
             self.set_trade_price(price)
+
+    def stop(self):
+        self.market.stop()
