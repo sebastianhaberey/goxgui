@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file '/Users/user/git/goxgui/goxgui/ui/preferences.ui'
 #
-# Created: Fri May  3 15:34:53 2013
+# Created: Fri May  3 15:59:03 2013
 #      by: PyQt4 UI code generator 4.9.4
 #
 # WARNING! All changes made in this file will be lost!
@@ -148,7 +148,7 @@ class Ui_Preferences(object):
         self.verticalLayout_2.addLayout(self.horizontalLayout)
 
         self.retranslateUi(Preferences)
-        self.tabWidget.setCurrentIndex(1)
+        self.tabWidget.setCurrentIndex(0)
         QtCore.QObject.connect(self.buttonBox, QtCore.SIGNAL(_fromUtf8("accepted()")), Preferences.accept)
         QtCore.QObject.connect(self.buttonBox, QtCore.SIGNAL(_fromUtf8("rejected()")), Preferences.reject)
         QtCore.QMetaObject.connectSlotsByName(Preferences)

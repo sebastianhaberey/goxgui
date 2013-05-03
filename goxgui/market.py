@@ -3,7 +3,6 @@ from PyQt4.QtCore import pyqtSignal
 import goxapi
 import utilities
 import time
-import logging
 
 
 class Market(QObject):
@@ -38,7 +37,7 @@ class Market(QObject):
         gox.signal_debug.connect(self.slot_log)
         gox.signal_wallet.connect(self.slot_wallet_changed)
         gox.signal_orderlag.connect(self.slot_orderlag)
-        gox.signal_userorder.connect(self.userorder)
+        gox.signal_userorder.connect(self.slot_userorder)
         gox.orderbook.signal_changed.connect(self.slot_orderbook_changed)
 
         return gox
@@ -56,6 +55,11 @@ class Market(QObject):
 
     def slot_wallet_changed(self, dummy_gox, (text)):
         self.signal_wallet.emit()
+
+    def slot_userorder(self, dummy_sender, data):
+        (price, size, order_type, oid, status_message) = data
+        self.signal_userorder.emit(
+            price, size, order_type, oid, status_message)
 
     # end slots
 
@@ -101,8 +105,3 @@ class Market(QObject):
         Returns the account balance for the specified currency
         '''
         return self.gox.wallet[currency]
-
-    def userorder(self, dummy_sender, data):
-        (price, size, order_type, oid, status_message) = data
-        self.signal_userorder.emit(
-            price, size, order_type, oid, status_message)
