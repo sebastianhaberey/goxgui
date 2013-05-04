@@ -78,6 +78,7 @@ class View(QMainWindow):
         self.market.start()
 
         # show main window
+        self.adjustSize()
         self.show()
         self.raise_()
 

@@ -24,9 +24,9 @@ class Preferences(QDialog):
         self.__ui.setupUi(self)
 
         # connect ui signals to logic
-        self.__ui.lineEditKey.editingFinished.connect(
+        self.__ui.lineEditKey.textChanged.connect(
             self.__slot_validate_credentials)
-        self.__ui.lineEditSecret.editingFinished.connect(
+        self.__ui.lineEditSecret.textChanged.connect(
             self.__slot_validate_credentials)
 
         # initialize config parser
@@ -79,6 +79,7 @@ class Preferences(QDialog):
     def __load_to_gui(self):
         self.__ui.lineEditKey.setText(self.get_key())
         self.__ui.lineEditSecret.setText(self.get_secret())
+        self.__set_status('')
 
     def __save_from_gui(self):
         self.__set_key(str(self.__ui.lineEditKey.text()))
@@ -86,11 +87,11 @@ class Preferences(QDialog):
 
     def __disable_ok(self, text):
         self.__ui.buttonBox.button(QDialogButtonBox.Ok).setEnabled(False)
-        self.__ui.labelStatus.setText(text)
+        self.__set_status(text)
 
     def __enable_ok(self):
         self.__ui.buttonBox.button(QDialogButtonBox.Ok).setEnabled(True)
-        self.__ui.labelStatus.setText('')
+        self.__set_status('')
 
     def __save(self):
         '''
@@ -115,8 +116,12 @@ class Preferences(QDialog):
         '''
         Writes the specified secret to the configuration file (encrypted).
         '''
-        secret = utilities.encrypt(secret, Preferences.PASSPHRASE)
+        if secret != '':
+            secret = utilities.encrypt(secret, Preferences.PASSPHRASE)
         self.set('secret', secret)
+
+    def __set_status(self, text):
+        self.__ui.labelStatus.setText(text)
 
     # end private methods
 

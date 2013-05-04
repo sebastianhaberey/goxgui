@@ -28,9 +28,9 @@ def gox2internal(value, currency):
     (see https://en.bitcoin.it/wiki/MtGox/API)
     into the application's internal format.
     '''
-    if currency == "BTC":
+    if currency == 'BTC':
         return value * FACTOR_GOX_BTC
-    if currency == "JPY":
+    if currency == 'JPY':
         return value * FACTOR_GOX_JPY
     else:
         return value * FACTOR_GOX_USD
@@ -40,9 +40,9 @@ def internal2gox(value, currency):
     '''
     Converts the specified value from internal format to gox format
     '''
-    if currency == "BTC":
+    if currency == 'BTC':
         return value / FACTOR_GOX_BTC
-    if currency == "JPY":
+    if currency == 'JPY':
         return value / FACTOR_GOX_JPY
     else:
         return value / FACTOR_GOX_USD
@@ -52,7 +52,7 @@ def float2str(value, decimals=8):
     '''
     Returns currency float formatted as a string.
     '''
-    return ("{{:,.{0}f}}".format(decimals).format(value))
+    return ('{{:,.{0}f}}'.format(decimals).format(value))
 
 
 def internal2float(value):
@@ -96,15 +96,15 @@ def encrypt(secret, password):
     '''
 
     # pylint: disable=E1101
-    hashed_pass = hashlib.sha512(password.encode("utf-8")).digest()
+    hashed_pass = hashlib.sha512(password.encode('utf-8')).digest()
     crypt_key = hashed_pass[:32]
     crypt_ini = hashed_pass[-16:]
     aes = AES.new(crypt_key, AES.MODE_OFB, crypt_ini)
 
     # since the secret is a base64 string we can just just pad it with
     # spaces which can easily be stripped again after decryping
-    secret += " " * (16 - len(secret) % 16)
-    return base64.b64encode(aes.encrypt(secret)).decode("ascii")
+    secret += ' ' * (16 - len(secret) % 16)
+    return base64.b64encode(aes.encrypt(secret)).decode('ascii')
 
 
 def decrypt(secret, password):
@@ -113,22 +113,22 @@ def decrypt(secret, password):
     throws exception in case of failure.
     '''
 
-    if secret == "":
-        raise Exception("secret cannot be empty")
+    if secret == '':
+        raise Exception('secret cannot be empty')
 
     # pylint: disable=E1101
-    hashed_pass = hashlib.sha512(password.encode("utf-8")).digest()
+    hashed_pass = hashlib.sha512(password.encode('utf-8')).digest()
     crypt_key = hashed_pass[:32]
     crypt_ini = hashed_pass[-16:]
     aes = AES.new(crypt_key, AES.MODE_OFB, crypt_ini)
-    encrypted_secret = base64.b64decode(secret.strip().encode("ascii"))
+    encrypted_secret = base64.b64decode(secret.strip().encode('ascii'))
     secret = aes.decrypt(encrypted_secret).strip()
 
     # is it plain ascii? (if not this will raise exception)
-    dummy = secret.decode("ascii")
+    dummy = secret.decode('ascii')
     # can it be decoded? correct size afterwards?
     if len(base64.b64decode(secret)) != 64:
-        raise Exception("decrypted secret has wrong size")
+        raise Exception('decrypted secret has wrong size')
 
     return secret
 
@@ -139,14 +139,14 @@ def assert_valid_key(key):
     throws an exception otherwise.
     '''
 
-    if key == "":
-        raise Exception("key cannot be empty")
+    if key == '':
+        raise Exception('key cannot be empty')
 
     # key must be only hex digits and have the right size
     key = key.strip()
-    hex_key = key.replace("-", "").encode("ascii")
+    hex_key = key.replace('-', '').encode('ascii')
     if len(binascii.unhexlify(hex_key)) != 16:
-        raise Exception("key has wrong size")
+        raise Exception('key has wrong size')
 
 
 def assert_valid_secret(secret):
@@ -168,6 +168,6 @@ def resource_path(relative_path):
         # PyInstaller creates a temp folder and stores path in _MEIPASS
         base_path = getattr(sys, '_MEIPASS', os.getcwd())
     except Exception:
-        base_path = os.path.abspath(".")
+        base_path = os.path.abspath('.')
 
     return os.path.join(base_path, relative_path)
