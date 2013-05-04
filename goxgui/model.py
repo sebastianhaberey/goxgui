@@ -14,8 +14,8 @@ class Model(QAbstractTableModel):
     # orders smaller than this value will be grouped
     GROUP_ORDERS = 0.6
 
-    def __init__(self, market, headerdata):
-        QAbstractTableModel.__init__(self)
+    def __init__(self, parent, market, headerdata):
+        QAbstractTableModel.__init__(self, parent)
         self.__market = market
         self.__market.signal_orderbook_changed.connect(self.slot_changed)
         self.__headerdata = headerdata
@@ -116,8 +116,8 @@ class Model(QAbstractTableModel):
 
 class ModelAsk(Model):
 
-    def __init__(self, gox):
-        Model.__init__(self, gox, ['Ask $', 'Size ' + utilities.BITCOIN_SYMBOL,
+    def __init__(self, parent, gox):
+        Model.__init__(self, parent, gox, ['Ask $', 'Size ' + utilities.BITCOIN_SYMBOL,
             'Total ' + utilities.BITCOIN_SYMBOL])
 
     def _get_data_from_book(self, book):
@@ -126,8 +126,8 @@ class ModelAsk(Model):
 
 class ModelBid(Model):
 
-    def __init__(self, gox):
-        Model.__init__(self, gox, ['Bid $', 'Size ' + utilities.BITCOIN_SYMBOL,
+    def __init__(self, parent, gox):
+        Model.__init__(self, parent, gox, ['Bid $', 'Size ' + utilities.BITCOIN_SYMBOL,
             'Total ' + utilities.BITCOIN_SYMBOL])
 
     def _get_data_from_book(self, book):

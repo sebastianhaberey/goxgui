@@ -67,9 +67,9 @@ class View(QMainWindow):
             self.show_preferences)
 
         # initialize and connect bid / ask table models
-        self.modelAsk = ModelAsk(self.market)
+        self.modelAsk = ModelAsk(self, self.market)
         self.ui.tableAsk.setModel(self.modelAsk)
-        self.modelBid = ModelBid(self.market)
+        self.modelBid = ModelBid(self, self.market)
         self.ui.tableBid.setModel(self.modelBid)
 
         # associate log channels with their check boxes
@@ -107,7 +107,6 @@ class View(QMainWindow):
         margins = self.ui.widgetMain.layout().contentsMargins()
         margins.setTop(24)
         self.ui.widgetMain.layout().setContentsMargins(margins)
-
 
     def show_preferences(self):
 
