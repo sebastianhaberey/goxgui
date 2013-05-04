@@ -4,6 +4,7 @@ import binascii
 from Crypto.Cipher import AES
 import sys
 import os
+import platform
 
 
 # factor internal representation / regular float
@@ -171,3 +172,10 @@ def resource_path(relative_path):
         base_path = os.path.abspath('.')
 
     return os.path.join(base_path, relative_path)
+
+
+def platform_is_mac():
+    '''
+    Returns true if the current platform is mac.
+    '''
+    return platform.system() == 'Darwin'
