@@ -7,6 +7,7 @@ from PyQt4.QtGui import QTextCursor
 from ui.main_window_ import Ui_MainWindow
 from model import ModelAsk
 from model import ModelBid
+from PyQt4 import QtGui
 
 
 class View(QMainWindow):
@@ -30,6 +31,10 @@ class View(QMainWindow):
         # set up main window
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
+
+        # improve ui on mac
+        if utilities.platform_is_mac():
+            self.adjust_for_mac()
 
         # connect market signals to our logic
         self.market.signal_log.connect(self.slot_log)
@@ -80,6 +85,28 @@ class View(QMainWindow):
         # show main window
         self.show()
         self.raise_()
+
+    def adjust_for_mac(self):
+        '''
+        Fixes some stuff that looks good on windows but bad on mac.
+        '''
+        # the default fixed font is unreadable on mac, so replace it
+        font = QtGui.QFont('Monaco', 11)
+        self.ui.tableAsk.setFont(font)
+        self.ui.tableBid.setFont(font)
+        self.ui.textBrowserLog.setFont(font)
+        self.ui.textBrowserStatus.setFont(font)
+        self.ui.lineEditOrder.setFont(font)
+        self.ui.doubleSpinBoxBtc.setFont(font)
+        self.ui.doubleSpinBoxPrice.setFont(font)
+        self.ui.doubleSpinBoxTotal.setFont(font)
+
+        # the space between application title bar and
+        # the ui elements is too small on mac
+        margins = self.ui.widgetMain.layout().contentsMargins()
+        margins.setTop(24)
+        self.ui.widgetMain.layout().setContentsMargins(margins)
+
 
     def show_preferences(self):
 

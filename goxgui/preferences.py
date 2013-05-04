@@ -5,6 +5,7 @@ from os import path
 from PyQt4.QtGui import QDialog
 from PyQt4.QtGui import QDialogButtonBox
 from ui.preferences_ import Ui_Preferences
+from PyQt4 import QtGui
 
 
 class Preferences(QDialog):
@@ -22,6 +23,10 @@ class Preferences(QDialog):
         # set up ui
         self.__ui = Ui_Preferences()
         self.__ui.setupUi(self)
+
+        # improve ui on mac
+        if utilities.platform_is_mac():
+            self.__adjust_for_mac()
 
         # connect ui signals to logic
         self.__ui.lineEditKey.editingFinished.connect(
@@ -117,6 +122,22 @@ class Preferences(QDialog):
         '''
         secret = utilities.encrypt(secret, Preferences.PASSPHRASE)
         self.set('secret', secret)
+
+    def __adjust_for_mac(self):
+        '''
+        Fixes some stuff that looks good on windows but bad on mac.
+        '''
+        # the default fixed fontA is unreadable on mac, so replace it
+        fontA = QtGui.QFont('Monaco', 11)
+        self.__ui.lineEditPassword.setFont(fontA)
+        self.__ui.lineEditKey.setFont(fontA)
+        self.__ui.lineEditSecret.setFont(fontA)
+
+        # the default label font is too big on mac
+        fontB = QtGui.QFont('Lucida Grande', 11)
+        self.__ui.labelPassword.setFont(fontB)
+        self.__ui.labelKeySecret.setFont(fontB)
+        self.__ui.labelCurrency.setFont(fontB)
 
     # end private methods
 

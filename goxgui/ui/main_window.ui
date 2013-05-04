@@ -12,8 +12,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>911</width>
-    <height>898</height>
+    <width>886</width>
+    <height>790</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -34,13 +34,7 @@
    </property>
    <layout class="QVBoxLayout" name="verticalLayout_2">
     <property name="spacing">
-     <number>-1</number>
-    </property>
-    <property name="topMargin">
-     <number>24</number>
-    </property>
-    <property name="bottomMargin">
-     <number>0</number>
+     <number>6</number>
     </property>
     <item>
      <widget class="QGroupBox" name="groupBoxAccount">
@@ -160,8 +154,7 @@
          </property>
          <property name="font">
           <font>
-           <family>Monaco</family>
-           <pointsize>11</pointsize>
+           <family>Courier New</family>
           </font>
          </property>
          <property name="cursor" stdset="0">
@@ -342,12 +335,6 @@
         <layout class="QHBoxLayout" name="horizontalLayout_8">
          <item>
           <widget class="QLineEdit" name="lineEditOrder">
-           <property name="font">
-            <font>
-             <family>Monaco</family>
-             <pointsize>11</pointsize>
-            </font>
-           </property>
            <property name="toolTip">
             <string>Paste order ID here or click link above</string>
            </property>
@@ -396,12 +383,6 @@
            <width>420</width>
            <height>300</height>
           </size>
-         </property>
-         <property name="font">
-          <font>
-           <family>Monaco</family>
-           <pointsize>11</pointsize>
-          </font>
          </property>
          <property name="cursor" stdset="0">
           <cursorShape>PointingHandCursor</cursorShape>
@@ -466,12 +447,6 @@
            <width>420</width>
            <height>300</height>
           </size>
-         </property>
-         <property name="font">
-          <font>
-           <family>Monaco</family>
-           <pointsize>11</pointsize>
-          </font>
          </property>
          <property name="cursor" stdset="0">
           <cursorShape>PointingHandCursor</cursorShape>
@@ -601,8 +576,7 @@
          </property>
          <property name="font">
           <font>
-           <family>Monaco</family>
-           <pointsize>11</pointsize>
+           <family>Courier New</family>
           </font>
          </property>
          <property name="cursor" stdset="0">
@@ -630,8 +604,8 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>911</width>
-     <height>22</height>
+     <width>886</width>
+     <height>18</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuOptions">
