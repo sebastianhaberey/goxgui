@@ -2,7 +2,7 @@
 <project name="goxgui" basedir=".">
 
 	<!-- Change version number here -->
-	<property name="version" value="1.0.0" />
+	<property name="version" value="1.1.0" />
 	<!-- Change end -->
 
 	<property name="src.dir" location="../" />
@@ -80,7 +80,6 @@
 
 		<exec executable="${python_executable.file}">
 			<arg value="${pyinstaller_script.file}" />
-			<arg value="--windowed" />
 			<arg value="${spec.file}" />
 		</exec>
 
