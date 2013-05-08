@@ -12,12 +12,12 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>886</width>
-    <height>790</height>
+    <width>904</width>
+    <height>858</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>MtGox Trading UI</string>
+   <string>goxgui</string>
   </property>
   <property name="locale">
    <locale language="English" country="UnitedStates"/>
@@ -58,11 +58,14 @@
              <height>0</height>
             </size>
            </property>
+           <property name="cursor">
+            <cursorShape>PointingHandCursor</cursorShape>
+           </property>
            <property name="toolTip">
             <string>Push to use this value</string>
            </property>
            <property name="text">
-            <string>BTC</string>
+            <string>-</string>
            </property>
           </widget>
          </item>
@@ -113,11 +116,14 @@
              <height>0</height>
             </size>
            </property>
+           <property name="cursor">
+            <cursorShape>PointingHandCursor</cursorShape>
+           </property>
            <property name="toolTip">
             <string>Push to use this value</string>
            </property>
            <property name="text">
-            <string>USD</string>
+            <string>-</string>
            </property>
           </widget>
          </item>
@@ -204,6 +210,9 @@
          </item>
          <item>
           <widget class="QPushButton" name="pushButtonSize">
+           <property name="cursor">
+            <cursorShape>PointingHandCursor</cursorShape>
+           </property>
            <property name="toolTip">
             <string>Recalculate size</string>
            </property>
@@ -213,15 +222,18 @@
           </widget>
          </item>
          <item>
-          <widget class="QDoubleSpinBox" name="doubleSpinBoxBtc">
+          <widget class="QDoubleSpinBox" name="doubleSpinBoxSize">
            <property name="sizePolicy">
             <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
              <horstretch>0</horstretch>
              <verstretch>0</verstretch>
             </sizepolicy>
            </property>
+           <property name="cursor">
+            <cursorShape>PointingHandCursor</cursorShape>
+           </property>
            <property name="toolTip">
-            <string>Size (in BTC)</string>
+            <string>Size</string>
            </property>
            <property name="alignment">
             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -233,12 +245,15 @@
             <number>8</number>
            </property>
            <property name="maximum">
-            <double>999999.000000000000000</double>
+            <double>999999999.000000000000000</double>
            </property>
           </widget>
          </item>
          <item>
           <widget class="QPushButton" name="pushButtonPrice">
+           <property name="cursor">
+            <cursorShape>PointingHandCursor</cursorShape>
+           </property>
            <property name="toolTip">
             <string>Suggest price</string>
            </property>
@@ -258,8 +273,11 @@
              <verstretch>0</verstretch>
             </sizepolicy>
            </property>
+           <property name="cursor">
+            <cursorShape>PointingHandCursor</cursorShape>
+           </property>
            <property name="toolTip">
-            <string>Price (in USD)</string>
+            <string>Price</string>
            </property>
            <property name="alignment">
             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -271,15 +289,18 @@
             <number>5</number>
            </property>
            <property name="maximum">
-            <double>9999.000000000000000</double>
+            <double>999999999.000000000000000</double>
            </property>
            <property name="singleStep">
-            <double>0.010000000000000</double>
+            <double>1.000000000000000</double>
            </property>
           </widget>
          </item>
          <item>
           <widget class="QPushButton" name="pushButtonTotal">
+           <property name="cursor">
+            <cursorShape>PointingHandCursor</cursorShape>
+           </property>
            <property name="toolTip">
             <string>Recalculate total trade worth</string>
            </property>
@@ -296,8 +317,11 @@
              <verstretch>0</verstretch>
             </sizepolicy>
            </property>
+           <property name="cursor">
+            <cursorShape>PointingHandCursor</cursorShape>
+           </property>
            <property name="toolTip">
-            <string>Total trade worth (in USD)</string>
+            <string>Total trade worth</string>
            </property>
            <property name="alignment">
             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -309,10 +333,10 @@
             <number>5</number>
            </property>
            <property name="maximum">
-            <double>99999999.000000000000000</double>
+            <double>999999999.000000000000000</double>
            </property>
            <property name="singleStep">
-            <double>100.000000000000000</double>
+            <double>1.000000000000000</double>
            </property>
           </widget>
          </item>
@@ -415,10 +439,10 @@
           <bool>false</bool>
          </property>
          <attribute name="horizontalHeaderDefaultSectionSize">
-          <number>133</number>
+          <number>200</number>
          </attribute>
          <attribute name="horizontalHeaderMinimumSectionSize">
-          <number>133</number>
+          <number>200</number>
          </attribute>
          <attribute name="horizontalHeaderStretchLastSection">
           <bool>true</bool>
@@ -482,10 +506,10 @@
           <bool>false</bool>
          </property>
          <attribute name="horizontalHeaderDefaultSectionSize">
-          <number>133</number>
+          <number>200</number>
          </attribute>
          <attribute name="horizontalHeaderMinimumSectionSize">
-          <number>133</number>
+          <number>200</number>
          </attribute>
          <attribute name="horizontalHeaderStretchLastSection">
           <bool>true</bool>
@@ -604,8 +628,8 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>886</width>
-     <height>18</height>
+     <width>904</width>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuOptions">
@@ -628,7 +652,7 @@
   </action>
  </widget>
  <tabstops>
-  <tabstop>doubleSpinBoxBtc</tabstop>
+  <tabstop>doubleSpinBoxSize</tabstop>
   <tabstop>doubleSpinBoxPrice</tabstop>
   <tabstop>doubleSpinBoxTotal</tabstop>
   <tabstop>lineEditOrder</tabstop>

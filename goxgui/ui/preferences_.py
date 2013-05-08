@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file '/Users/user/git/goxgui/goxgui/ui/preferences.ui'
 #
-# Created: Sat May  4 10:04:18 2013
+# Created: Mon May  6 18:34:36 2013
 #      by: PyQt4 UI code generator 4.9.4
 #
 # WARNING! All changes made in this file will be lost!
@@ -91,7 +91,7 @@ class Ui_Preferences(object):
         self.verticalLayout_5 = QtGui.QVBoxLayout(self.tabVarious)
         self.verticalLayout_5.setObjectName(_fromUtf8("verticalLayout_5"))
         self.groupBoxCurrency = QtGui.QGroupBox(self.tabVarious)
-        self.groupBoxCurrency.setEnabled(False)
+        self.groupBoxCurrency.setEnabled(True)
         self.groupBoxCurrency.setFlat(True)
         self.groupBoxCurrency.setObjectName(_fromUtf8("groupBoxCurrency"))
         self.gridLayout_3 = QtGui.QGridLayout(self.groupBoxCurrency)
@@ -133,7 +133,7 @@ class Ui_Preferences(object):
         self.verticalLayout_2.addLayout(self.horizontalLayout)
 
         self.retranslateUi(Preferences)
-        self.tabWidget.setCurrentIndex(0)
+        self.tabWidget.setCurrentIndex(1)
         QtCore.QObject.connect(self.buttonBox, QtCore.SIGNAL(_fromUtf8("accepted()")), Preferences.accept)
         QtCore.QObject.connect(self.buttonBox, QtCore.SIGNAL(_fromUtf8("rejected()")), Preferences.reject)
         QtCore.QMetaObject.connectSlotsByName(Preferences)

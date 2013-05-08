@@ -1,9 +1,11 @@
+import abc
+
 from PyQt4.QtCore import QAbstractTableModel
 from PyQt4.QtCore import Qt
 from PyQt4.QtCore import QVariant
 from PyQt4.QtCore import SIGNAL
-import utilities
-import abc
+from market import Market
+from preferences import Preferences
 
 
 class Model(QAbstractTableModel):
@@ -11,82 +13,26 @@ class Model(QAbstractTableModel):
     Model representing a collection of orders.
     '''
 
-    # orders smaller than this value will be grouped
-    GROUP_ORDERS = 0.6
-
-    def __init__(self, parent, market, headerdata):
+    def __init__(self, parent):
         QAbstractTableModel.__init__(self, parent)
-        self.__market = market
-        self.__market.signal_orderbook_changed.connect(self.slot_changed)
-        self.__headerdata = headerdata
-        self.__data = []
 
-    # start slots
+    # private methods
 
-    def slot_changed(self, orderbook):
-        self.__data = self.__parse_data(orderbook)
+    def _slot_changed(self):
         self.emit(SIGNAL("layoutChanged()"))
 
-    # end slots
+    @abc.abstractmethod
+    def _get_header(self):
+        pass
 
-    def __parse_data(self, book):
-        '''
-        Parses the incoming data from gox,
-        converts money values to our internal money format.
-        '''
-        data_in = self._get_data_from_book(book)
-        data_out = []
-
-        total = 0
-        count = 1
-        vwap = 0
-        vsize = 0
-        for x in data_in:
-
-            price = x.price
-            size = x.volume
-
-            vsize += size
-            vwap += price * size
-
-            total += size
-            if vsize > utilities.float2internal(self.GROUP_ORDERS):
-                vwap = utilities.gox2internal(vwap / vsize, 'USD')
-                vsize = utilities.gox2internal(vsize, 'BTC')
-                total = utilities.gox2internal(total, 'BTC')
-                data_out.append([vwap, vsize, total])
-                count = 1
-                vwap = 0
-                vsize = 0
-            else:
-                count += 1
-
-        return data_out
+    # Qt methods
 
     @abc.abstractmethod
-    def _get_data_from_book(self, book):
-        '''
-        This method retrieves the orders relevant to this
-        specific model from the order book.
-        '''
-        return []
-
-    def get_price(self, index):
-        return self.__data[index][0]
-
-    def get_size(self, index):
-        return self.__data[index][1]
-
-    def get_total(self, index):
-        return self.__data[index][2]
-
-    # START Qt methods
-
     def rowCount(self, parent):
-        return len(self.__data)
+        pass
 
     def columnCount(self, parent):
-        return len(self.__headerdata)
+        return len(self._get_header())
 
     def data(self, index, role):
 
@@ -100,35 +46,71 @@ class Model(QAbstractTableModel):
         col = index.column()
 
         if col == 0:
-            return QVariant(utilities.internal2str(self.get_price(row), 5))
+            return QVariant(str(self.get_price(row)))
         if col == 1:
-            return QVariant(utilities.internal2str(self.get_size(row)))
-        if col == 2:
-            return QVariant(utilities.internal2str(self.get_total(row)))
+            return QVariant(str(self.get_size(row)))
 
     def headerData(self, col, orientation, role):
         if orientation == Qt.Horizontal and role == Qt.DisplayRole:
-            return QVariant(self.__headerdata[col])
+            return QVariant(self._get_header()[col])
         return QVariant()
 
-    # END Qt methods
+    # public methods
 
+    @abc.abstractmethod
+    def get_price(self, index):
+        pass
 
-class ModelAsk(Model):
-
-    def __init__(self, parent, gox):
-        Model.__init__(self, parent, gox, ['Ask $', 'Size ' + utilities.BITCOIN_SYMBOL,
-            'Total ' + utilities.BITCOIN_SYMBOL])
-
-    def _get_data_from_book(self, book):
-        return book.asks
+    @abc.abstractmethod
+    def get_size(self, index):
+        pass
 
 
 class ModelBid(Model):
 
-    def __init__(self, parent, gox):
-        Model.__init__(self, parent, gox, ['Bid $', 'Size ' + utilities.BITCOIN_SYMBOL,
-            'Total ' + utilities.BITCOIN_SYMBOL])
+    def __init__(self, parent, market, preferences):
+        Model.__init__(self, parent)
+        self.__market = market
+        self.__preferences = preferences
+        self.__market.signal_orderbook_changed.connect(self._slot_changed)
 
-    def _get_data_from_book(self, book):
-        return book.bids
+    def _get_header(self):
+        symbolQuote = self.__preferences.get_currency(
+            Preferences.CURRENCY_INDEX_QUOTE).symbol
+        symbolBase = self.__preferences.get_currency(
+            Preferences.CURRENCY_INDEX_BASE).symbol
+        return ['Bid ' + symbolQuote, 'Size ' + symbolBase]
+
+    def get_price(self, index):
+        return self.__market.get_order(Market.ORDER_TYPE_BID, index)[0]
+
+    def get_size(self, index):
+        return self.__market.get_order(Market.ORDER_TYPE_BID, index)[1]
+
+    def rowCount(self, parent):
+        return self.__market.get_order_count(Market.ORDER_TYPE_BID)
+
+
+class ModelAsk(Model):
+
+    def __init__(self, parent, market, preferences):
+        Model.__init__(self, parent)
+        self.__market = market
+        self.__preferences = preferences
+        self.__market.signal_orderbook_changed.connect(self._slot_changed)
+
+    def _get_header(self):
+        symbolQuote = self.__preferences.get_currency(
+            Preferences.CURRENCY_INDEX_QUOTE).symbol
+        symbolBase = self.__preferences.get_currency(
+            Preferences.CURRENCY_INDEX_BASE).symbol
+        return ['Ask ' + symbolQuote, 'Size ' + symbolBase]
+
+    def get_price(self, index):
+        return self.__market.get_order(Market.ORDER_TYPE_ASK, index)[0]
+
+    def get_size(self, index):
+        return self.__market.get_order(Market.ORDER_TYPE_ASK, index)[1]
+
+    def rowCount(self, parent):
+        return self.__market.get_order_count(Market.ORDER_TYPE_ASK)

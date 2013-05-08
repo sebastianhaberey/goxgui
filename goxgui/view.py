@@ -8,6 +8,8 @@ from ui.main_window_ import Ui_MainWindow
 from model import ModelAsk
 from model import ModelBid
 from PyQt4 import QtGui
+from money import Money
+from preferences import Preferences
 
 
 class View(QMainWindow):
@@ -15,11 +17,13 @@ class View(QMainWindow):
     Represents the combined view / control.
     '''
 
-    # how the application-proposed bid will differ from the selected bid
-    ADD_TO_BID = 1000
+    # how the application-proposed bid
+    # will differ from the selected bid (in pips)
+    ADD_TO_BID_PIPS = 1
 
-    # how the application-proposed ask will differ from the selected ask
-    SUB_FROM_ASK = 1000
+    # how the application-proposed ask
+    # will differ from the selected ask (in pips)
+    SUB_FROM_ASK_PIPS = 1
 
     def __init__(self, preferences, market):
 
@@ -46,9 +50,9 @@ class View(QMainWindow):
         self.ui.pushButtonGo.released.connect(
             self.execute_trade)
         self.ui.tableAsk.clicked.connect(
-            self.update_price_from_asks)
+            self.slot_update_price_from_asks)
         self.ui.tableBid.clicked.connect(
-            self.update_price_from_bids)
+            self.slot_update_price_from_bids)
         self.ui.pushButtonCancel.released.connect(
             self.cancel_order)
         self.ui.textBrowserStatus.anchorClicked.connect(
@@ -67,9 +71,9 @@ class View(QMainWindow):
             self.show_preferences)
 
         # initialize and connect bid / ask table models
-        self.modelAsk = ModelAsk(self, self.market)
+        self.modelAsk = ModelAsk(self, self.market, preferences)
         self.ui.tableAsk.setModel(self.modelAsk)
-        self.modelBid = ModelBid(self, self.market)
+        self.modelBid = ModelBid(self, self.market, preferences)
         self.ui.tableBid.setModel(self.modelBid)
 
         # associate log channels with their check boxes
@@ -79,6 +83,9 @@ class View(QMainWindow):
             [self.ui.checkBoxLogDepth, 'depth'],
         ]
 
+        # resets dynamic ui elements
+        self.reset()
+
         # activate market
         self.market.start()
 
@@ -86,6 +93,24 @@ class View(QMainWindow):
         self.adjustSize()
         self.show()
         self.raise_()
+
+    def reset(self):
+
+        # initialize wallet values
+        self.set_wallet_a(None)
+        self.set_wallet_b(None)
+
+        # adjust decimal values to current currencies
+        self.adjust_decimals()
+
+    def adjust_decimals(self):
+        currencyQuote = self.preferences.get_currency(
+            Preferences.CURRENCY_INDEX_QUOTE)
+        currencyBase = self.preferences.get_currency(
+            Preferences.CURRENCY_INDEX_BASE)
+        self.ui.doubleSpinBoxSize.setDecimals(currencyBase.decimals)
+        self.ui.doubleSpinBoxPrice.setDecimals(currencyQuote.decimals)
+        self.ui.doubleSpinBoxTotal.setDecimals(currencyQuote.decimals)
 
     def adjust_for_mac(self):
         '''
@@ -98,7 +123,7 @@ class View(QMainWindow):
         self.ui.textBrowserLog.setFont(font)
         self.ui.textBrowserStatus.setFont(font)
         self.ui.lineEditOrder.setFont(font)
-        self.ui.doubleSpinBoxBtc.setFont(font)
+        self.ui.doubleSpinBoxSize.setFont(font)
         self.ui.doubleSpinBoxPrice.setFont(font)
         self.ui.doubleSpinBoxTotal.setFont(font)
 
@@ -115,6 +140,7 @@ class View(QMainWindow):
             self.status_message('Preferences changed, restarting market.')
             self.market.stop()
             self.preferences.apply()
+            self.reset()
             self.market.start()
             self.status_message('Market restarted successfully.')
 
@@ -159,39 +185,52 @@ class View(QMainWindow):
         self.ui.textBrowserStatus.moveCursor(QTextCursor.End)
         self.ui.textBrowserStatus.append(text)
 
-    def set_wallet_btc(self, value):
-        self.ui.pushButtonWalletA.setEnabled(value > 0)
-        self.ui.pushButtonWalletA.setText(
-            'BTC: ' + utilities.internal2str(value))
+    def set_wallet_a(self, value):
 
-    def set_wallet_usd(self, value):
-        self.ui.pushButtonWalletB.setEnabled(value > 0)
-        self.ui.pushButtonWalletB.setText(
-            'USD: ' + utilities.internal2str(value, 5))
+        if value == None:
+            self.ui.pushButtonWalletA.setEnabled(False)
+            self.ui.pushButtonWalletA.setText('n/a')
+            return
+
+        self.ui.pushButtonWalletA.setEnabled(True)
+        self.ui.pushButtonWalletA.setText(value.to_long_string())
+
+    def set_wallet_b(self, value):
+
+        if value == None:
+            self.ui.pushButtonWalletB.setEnabled(False)
+            self.ui.pushButtonWalletB.setText('n/a')
+            return
+
+        self.ui.pushButtonWalletB.setEnabled(True)
+        self.ui.pushButtonWalletB.setText(value.to_long_string())
 
     def get_trade_size(self):
-        value = self.ui.doubleSpinBoxBtc.value()
-        return utilities.float2internal(value)
+        # re-convert trade size float value from gui
+        # to proper base currency value
+        return Money(self.ui.doubleSpinBoxSize.value(),
+            self.preferences.get_currency(Preferences.CURRENCY_INDEX_BASE))
 
     def set_trade_size(self, value):
-        value_float = utilities.internal2float(value)
-        self.ui.doubleSpinBoxBtc.setValue(value_float)
+        self.ui.doubleSpinBoxSize.setValue(value.to_float())
 
     def get_trade_price(self):
-        value = self.ui.doubleSpinBoxPrice.value()
-        return utilities.float2internal(value)
+        # re-convert trade price value from gui
+        # to proper quote currency value
+        return Money(self.ui.doubleSpinBoxPrice.value(),
+            self.preferences.get_currency(Preferences.CURRENCY_INDEX_QUOTE))
 
     def set_trade_price(self, value):
-        value_float = utilities.internal2float(value)
-        self.ui.doubleSpinBoxPrice.setValue(value_float)
+        self.ui.doubleSpinBoxPrice.setValue(value.to_float())
 
     def get_trade_total(self):
-        value = self.ui.doubleSpinBoxTotal.value()
-        return utilities.float2internal(value)
+        # re-convert trade total value from gui
+        # to proper quote currency value
+        return Money(self.ui.doubleSpinBoxTotal.value(),
+            self.preferences.get_currency(Preferences.CURRENCY_INDEX_QUOTE))
 
     def set_trade_total(self, value):
-        value_float = utilities.internal2float(value)
-        self.ui.doubleSpinBoxTotal.setValue(value_float)
+        self.ui.doubleSpinBoxTotal.setValue(value.to_float())
 
     def get_order_id(self):
         return str(self.ui.lineEditOrder.text())
@@ -204,19 +243,19 @@ class View(QMainWindow):
 
     def display_wallet(self):
 
-        self.set_wallet_usd(
-            utilities.gox2internal(self.market.get_balance('USD'), 'USD'))
-        self.set_wallet_btc(
-            utilities.gox2internal(self.market.get_balance('BTC'), 'BTC'))
+        self.set_wallet_a(self.market.get_balance(
+            Preferences.CURRENCY_INDEX_BASE))
+        self.set_wallet_b(self.market.get_balance(
+            Preferences.CURRENCY_INDEX_QUOTE))
 
     def set_trade_size_from_wallet(self):
         self.set_trade_size(
-            utilities.gox2internal(self.market.get_balance('BTC'), 'BTC'))
+            self.market.get_balance(Preferences.CURRENCY_INDEX_BASE))
         self.set_selected_trade_type('SELL')
 
     def set_trade_total_from_wallet(self):
         self.set_trade_total(
-            utilities.gox2internal(self.market.get_balance('USD'), 'USD'))
+            self.market.get_balance(Preferences.CURRENCY_INDEX_QUOTE))
         self.set_selected_trade_type('BUY')
 
     def display_orderlag(self, ms, text):
@@ -228,15 +267,15 @@ class View(QMainWindow):
 
         size = self.get_trade_size()
         price = self.get_trade_price()
-        total = self.get_trade_total()
+        total = price * size
 
         trade_name = 'BID' if trade_type == 'BUY' else 'ASK'
 
-        self.status_message('Placing order: {0} {1} BTC at {2} USD (total {3} USD)...'.format(# @IgnorePep8
+        self.status_message('Placing order: {0} {1} at {2} (total {3})...'.format(# @IgnorePep8
             trade_name,
-            utilities.internal2str(size),
-            utilities.internal2str(price, 5),
-            utilities.internal2str(total, 5)))
+            size.to_long_string(),
+            price.to_long_string(),
+            total.to_long_string()))
 
         if trade_type == 'BUY':
             self.market.buy(price, size)
@@ -246,27 +285,30 @@ class View(QMainWindow):
     def recalculate_size(self):
 
         price = self.get_trade_price()
-        if price == 0:
+
+        if price.value == 0:
             return
 
         total = self.get_trade_total()
-        size = utilities.divide_internal(total, price)
+        size = total / price
+
+        # we multiply quote currency values but the resulting
+        # size must be expressed in base currency
+        size.currency = self.preferences.get_currency(
+            Preferences.CURRENCY_INDEX_BASE)
+
         self.set_trade_size(size)
 
     def recalculate_total(self):
 
         price = self.get_trade_price()
         size = self.get_trade_size()
-        total = utilities.multiply_internal(price, size)
+        total = price * size
+
+        # ToDo: set currency type
         self.set_trade_total(total)
 
     def display_userorder(self, price, size, order_type, oid, status):
-
-        size = utilities.gox2internal(size, 'BTC')
-        price = utilities.gox2internal(price, 'USD')
-
-        size = utilities.internal2str(size)
-        price = utilities.internal2str(price)
 
         if order_type == '':
             self.status_message("Order <a href=\"{0}\">{0}</a> {1}.".format(
@@ -275,17 +317,29 @@ class View(QMainWindow):
                 self.set_order_id('')
         else:
             self.status_message("{0} size: {1}, price: {2}, oid: <a href=\"{3}\">{3}</a> - {4}".format(# @IgnorePep8
-                str.upper(str(order_type)), size, price, oid, status))
+                str.upper(str(order_type)),
+                size.to_long_string(),
+                price.to_long_string(),
+                oid,
+                status))
             if status == 'post-pending':
                 self.set_order_id(oid)
 
-    def update_price_from_asks(self, index):
-        self.set_trade_price(self.modelAsk.get_price(index.row())
-            - self.SUB_FROM_ASK)
+    def slot_update_price_from_asks(self, index):
+        self.update_price_from_asks(index.row())
 
-    def update_price_from_bids(self, index):
-        self.set_trade_price(self.modelBid.get_price(index.row())
-            + self.ADD_TO_BID)
+    def update_price_from_asks(self, row):
+        value = self.modelAsk.get_price(row)
+        pip = value.pip() * Money(View.SUB_FROM_ASK_PIPS)
+        self.set_trade_price(value - pip)
+
+    def slot_update_price_from_bids(self, index):
+        self.update_price_from_bids(index.row())
+
+    def update_price_from_bids(self, row):
+        value = self.modelBid.get_price(row)
+        pip = value.pip() * Money(View.ADD_TO_BID_PIPS)
+        self.set_trade_price(value + pip)
 
     def cancel_order(self):
         order_id = self.get_order_id()
@@ -297,13 +351,9 @@ class View(QMainWindow):
 
         trade_type = self.get_selected_trade_type()
         if trade_type == 'BUY':
-            price = self.modelBid.get_price(0)
-            price += self.ADD_TO_BID
-            self.set_trade_price(price)
+            self.update_price_from_bids(0)
         elif trade_type == 'SELL':
-            price = self.modelAsk.get_price(0)
-            price -= self.SUB_FROM_ASK
-            self.set_trade_price(price)
+            self.update_price_from_asks(0)
 
     def stop(self):
         self.market.stop()
