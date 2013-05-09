@@ -1,4 +1,5 @@
 import abc
+import money
 
 from PyQt4.QtCore import QAbstractTableModel
 from PyQt4.QtCore import Qt
@@ -13,13 +14,22 @@ class Model(QAbstractTableModel):
     Model representing a collection of orders.
     '''
 
-    def __init__(self, parent):
+    def __init__(self, parent, preferences):
         QAbstractTableModel.__init__(self, parent)
+        self.__preferences = preferences
 
-    # private methods
+    # protected methods
 
     def _slot_changed(self):
         self.emit(SIGNAL("layoutChanged()"))
+
+    def _get_base_currency(self):
+        return self.__preferences.get_currency(
+            Preferences.CURRENCY_INDEX_BASE)
+
+    def _get_quote_currency(self):
+        return self.__preferences.get_currency(
+            Preferences.CURRENCY_INDEX_QUOTE)
 
     @abc.abstractmethod
     def _get_header(self):
@@ -46,9 +56,11 @@ class Model(QAbstractTableModel):
         col = index.column()
 
         if col == 0:
-            return QVariant(str(self.get_price(row)))
+            return QVariant(money.to_string(
+                self.get_price(row), self._get_quote_currency()))
         if col == 1:
-            return QVariant(str(self.get_size(row)))
+            return QVariant(money.to_string(
+                self.get_size(row), self._get_base_currency()))
 
     def headerData(self, col, orientation, role):
         if orientation == Qt.Horizontal and role == Qt.DisplayRole:
@@ -69,16 +81,13 @@ class Model(QAbstractTableModel):
 class ModelBid(Model):
 
     def __init__(self, parent, market, preferences):
-        Model.__init__(self, parent)
+        Model.__init__(self, parent, preferences)
         self.__market = market
-        self.__preferences = preferences
         self.__market.signal_orderbook_changed.connect(self._slot_changed)
 
     def _get_header(self):
-        symbolQuote = self.__preferences.get_currency(
-            Preferences.CURRENCY_INDEX_QUOTE).symbol
-        symbolBase = self.__preferences.get_currency(
-            Preferences.CURRENCY_INDEX_BASE).symbol
+        symbolQuote = self._get_base_currency().symbol
+        symbolBase = self._get_quote_currency().symbol
         return ['Bid ' + symbolQuote, 'Size ' + symbolBase]
 
     def get_price(self, index):
@@ -94,16 +103,13 @@ class ModelBid(Model):
 class ModelAsk(Model):
 
     def __init__(self, parent, market, preferences):
-        Model.__init__(self, parent)
+        Model.__init__(self, parent, preferences)
         self.__market = market
-        self.__preferences = preferences
         self.__market.signal_orderbook_changed.connect(self._slot_changed)
 
     def _get_header(self):
-        symbolQuote = self.__preferences.get_currency(
-            Preferences.CURRENCY_INDEX_QUOTE).symbol
-        symbolBase = self.__preferences.get_currency(
-            Preferences.CURRENCY_INDEX_BASE).symbol
+        symbolQuote = self._get_base_currency().symbol
+        symbolBase = self._get_quote_currency().symbol
         return ['Ask ' + symbolQuote, 'Size ' + symbolBase]
 
     def get_price(self, index):

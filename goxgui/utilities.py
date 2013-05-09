@@ -7,22 +7,6 @@ import os
 import platform
 
 
-# factor internal representation / regular float
-FACTOR_FLOAT = 100000000
-
-# factor internal representation / gox (BTC)
-FACTOR_GOX_BTC = 1
-
-# factor internal representation / gox (JPY)
-FACTOR_GOX_JPY = 100000
-
-# factor internal representation / gox (USD)
-FACTOR_GOX_USD = 1000
-
-# this symbol will be used as bitcoin symbol
-BITCOIN_SYMBOL = unichr(3647)
-
-
 def encrypt(secret, password):
     '''
     Encrypts the specified secret using the specified password.

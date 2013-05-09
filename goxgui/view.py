@@ -1,6 +1,7 @@
 import utilities
 import time
 import logging
+import money
 
 from PyQt4.QtGui import QMainWindow
 from PyQt4.QtGui import QTextCursor
@@ -8,7 +9,6 @@ from ui.main_window_ import Ui_MainWindow
 from model import ModelAsk
 from model import ModelBid
 from PyQt4 import QtGui
-from money import Money
 from preferences import Preferences
 
 
@@ -94,6 +94,12 @@ class View(QMainWindow):
         self.show()
         self.raise_()
 
+    def get_base_currency(self):
+        return self.preferences.get_currency(Preferences.CURRENCY_INDEX_BASE)
+
+    def get_quote_currency(self):
+        return self.preferences.get_currency(Preferences.CURRENCY_INDEX_QUOTE)
+
     def reset(self):
 
         # initialize wallet values
@@ -104,10 +110,8 @@ class View(QMainWindow):
         self.adjust_decimals()
 
     def adjust_decimals(self):
-        currencyQuote = self.preferences.get_currency(
-            Preferences.CURRENCY_INDEX_QUOTE)
-        currencyBase = self.preferences.get_currency(
-            Preferences.CURRENCY_INDEX_BASE)
+        currencyQuote = self.get_quote_currency()
+        currencyBase = self.get_base_currency()
         self.ui.doubleSpinBoxSize.setDecimals(currencyBase.decimals)
         self.ui.doubleSpinBoxPrice.setDecimals(currencyQuote.decimals)
         self.ui.doubleSpinBoxTotal.setDecimals(currencyQuote.decimals)
@@ -193,7 +197,8 @@ class View(QMainWindow):
             return
 
         self.ui.pushButtonWalletA.setEnabled(True)
-        self.ui.pushButtonWalletA.setText(value.to_long_string())
+        self.ui.pushButtonWalletA.setText(
+            money.to_long_string(value, self.get_base_currency()))
 
     def set_wallet_b(self, value):
 
@@ -203,34 +208,26 @@ class View(QMainWindow):
             return
 
         self.ui.pushButtonWalletB.setEnabled(True)
-        self.ui.pushButtonWalletB.setText(value.to_long_string())
+        self.ui.pushButtonWalletB.setText(
+            money.to_long_string(value, self.get_quote_currency()))
 
     def get_trade_size(self):
-        # re-convert trade size float value from gui
-        # to proper base currency value
-        return Money(self.ui.doubleSpinBoxSize.value(),
-            self.preferences.get_currency(Preferences.CURRENCY_INDEX_BASE))
+        return money.to_money(self.ui.doubleSpinBoxSize.value())
 
     def set_trade_size(self, value):
-        self.ui.doubleSpinBoxSize.setValue(value.to_float())
+        self.ui.doubleSpinBoxSize.setValue(money.to_float(value))
 
     def get_trade_price(self):
-        # re-convert trade price value from gui
-        # to proper quote currency value
-        return Money(self.ui.doubleSpinBoxPrice.value(),
-            self.preferences.get_currency(Preferences.CURRENCY_INDEX_QUOTE))
+        return money.to_money(self.ui.doubleSpinBoxPrice.value())
 
     def set_trade_price(self, value):
-        self.ui.doubleSpinBoxPrice.setValue(value.to_float())
+        self.ui.doubleSpinBoxPrice.setValue(money.to_float(value))
 
     def get_trade_total(self):
-        # re-convert trade total value from gui
-        # to proper quote currency value
-        return Money(self.ui.doubleSpinBoxTotal.value(),
-            self.preferences.get_currency(Preferences.CURRENCY_INDEX_QUOTE))
+        return money.to_money(self.ui.doubleSpinBoxTotal.value())
 
     def set_trade_total(self, value):
-        self.ui.doubleSpinBoxTotal.setValue(value.to_float())
+        self.ui.doubleSpinBoxTotal.setValue(money.to_float(value))
 
     def get_order_id(self):
         return str(self.ui.lineEditOrder.text())
@@ -267,15 +264,15 @@ class View(QMainWindow):
 
         size = self.get_trade_size()
         price = self.get_trade_price()
-        total = price * size
+        total = money.multiply(price, size)
 
         trade_name = 'BID' if trade_type == 'BUY' else 'ASK'
 
         self.status_message('Placing order: {0} {1} at {2} (total {3})...'.format(# @IgnorePep8
             trade_name,
-            size.to_long_string(),
-            price.to_long_string(),
-            total.to_long_string()))
+            money.to_long_string(size, self.get_base_currency()),
+            money.to_long_string(price, self.get_quote_currency()),
+            money.to_long_string(total, self.get_quote_currency())))
 
         if trade_type == 'BUY':
             self.market.buy(price, size)
@@ -286,26 +283,19 @@ class View(QMainWindow):
 
         price = self.get_trade_price()
 
-        if price.value == 0:
+        if price == 0:
             return
 
         total = self.get_trade_total()
-        size = total / price
-
-        # we multiply quote currency values but the resulting
-        # size must be expressed in base currency
-        size.currency = self.preferences.get_currency(
-            Preferences.CURRENCY_INDEX_BASE)
-
+        size = money.divide(total, price)
         self.set_trade_size(size)
 
     def recalculate_total(self):
 
         price = self.get_trade_price()
         size = self.get_trade_size()
-        total = price * size
+        total = money.multiply(price, size)
 
-        # ToDo: set currency type
         self.set_trade_total(total)
 
     def display_userorder(self, price, size, order_type, oid, status):
@@ -318,8 +308,8 @@ class View(QMainWindow):
         else:
             self.status_message("{0} size: {1}, price: {2}, oid: <a href=\"{3}\">{3}</a> - {4}".format(# @IgnorePep8
                 str.upper(str(order_type)),
-                size.to_long_string(),
-                price.to_long_string(),
+                money.to_long_string(size, self.get_base_currency()),
+                money.to_long_string(price, self.get_quote_currency()),
                 oid,
                 status))
             if status == 'post-pending':
@@ -330,7 +320,7 @@ class View(QMainWindow):
 
     def update_price_from_asks(self, row):
         value = self.modelAsk.get_price(row)
-        pip = value.pip() * Money(View.SUB_FROM_ASK_PIPS)
+        pip = money.pip(self.get_quote_currency()) * View.SUB_FROM_ASK_PIPS
         self.set_trade_price(value - pip)
 
     def slot_update_price_from_bids(self, index):
@@ -338,7 +328,7 @@ class View(QMainWindow):
 
     def update_price_from_bids(self, row):
         value = self.modelBid.get_price(row)
-        pip = value.pip() * Money(View.ADD_TO_BID_PIPS)
+        pip = money.pip(self.get_quote_currency()) * View.SUB_FROM_ASK_PIPS
         self.set_trade_price(value + pip)
 
     def cancel_order(self):

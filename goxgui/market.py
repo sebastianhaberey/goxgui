@@ -5,7 +5,6 @@ from preferences import Preferences
 from currency import Currency
 from PyQt4.QtCore import QObject
 from PyQt4.QtCore import pyqtSignal
-from money import Money
 
 
 class Market(QObject):
@@ -109,18 +108,15 @@ class Market(QObject):
 
     def __to_internal(self, index, value):
         '''
-        Converts an external money value (integer value) into
-        an internal money value (a money object).
+        Converts an external money value into an internal money value.
         '''
-        return Money(value * pow(10, self.__get_currency_shift(index)),
-            self.__preferences.get_currency(index), False)
+        return value * pow(10, self.__get_currency_shift(index))
 
-    def __to_external(self, index, money):
+    def __to_external(self, index, value):
         '''
-        Converts an internal money value (a money object) into
-        an external money value (integer)
+        Converts an internal money value into an external money value.
         '''
-        return money.value / pow(10, self.__get_currency_shift(index))
+        return value / pow(10, self.__get_currency_shift(index))
 
     def __slot_log(self, dummy, (text)):
         self.signal_log.emit(text)
