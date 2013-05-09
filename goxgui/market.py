@@ -33,7 +33,16 @@ class Market(QObject):
         Currency('THB'),
         Currency('NZD'),
         Currency('NOK'),
+        Currency('CZK'),
         ]
+
+    # how currencies have to be shifted in terms of decimal places
+    # between the market and the internal representation
+    __SHIFT = {
+        'BTC': 0,
+        'JPY': 5,
+        'SEK': 5,
+        }
 
     # constants to select order type
     # when querying order book data
@@ -92,18 +101,10 @@ class Market(QObject):
         '''
         symbol = self.__preferences.get_currency(index).symbol
 
-        # in gox, BTC values have 8 decimals, just like our internal format,
-        # so no conversion is necessary
-        if symbol == 'BTC':
-            return 0
+        if symbol in Market.__SHIFT:
+            return Market.__SHIFT[symbol]
 
-        # in gox, JPY values have 3 decimals, so we have to add 5 decimals
-        # to convert to our internal format
-        if symbol == 'JPY':
-            return 5
-
-        # any other currency has 5 decimals in gox,
-        # so we have to add 3 decimals to convert to internal format
+        # the default shift is 3
         return 3
 
     def __to_internal(self, index, value):
@@ -111,17 +112,15 @@ class Market(QObject):
         Converts an external money value (integer value) into
         an internal money value (a money object).
         '''
-        shift = self.__get_currency_shift(index)
-        return Money(value * pow(10, shift),
+        return Money(value * pow(10, self.__get_currency_shift(index)),
             self.__preferences.get_currency(index), False)
 
     def __to_external(self, index, money):
         '''
-        Converts an internal money value (money object) into
+        Converts an internal money value (a money object) into
         an external money value (integer)
         '''
-        shift = self.__get_currency_shift(index)
-        return money.value / pow(10, shift)
+        return money.value / pow(10, self.__get_currency_shift(index))
 
     def __slot_log(self, dummy, (text)):
         self.signal_log.emit(text)

@@ -5,6 +5,9 @@ class Money(object):
     '''
     Represents a money value including various attributes
     such as currency type, number of decimals to render, etc.
+    The result of all the arithmetic operations will be a money
+    value with all the attributes (e.g. currency)
+    of the current money value.
     '''
     __INTERNAL_DECIMALS = 8
     __INTERNAL_FACTOR = pow(10, __INTERNAL_DECIMALS)
@@ -27,7 +30,7 @@ class Money(object):
 
     def to_long_string(self):
         '''
-        Returns the current money value as a string including currency type
+        Returns the current money value as a string including currency type.
         '''
         return '{} {}'.format(self.__str__(), self.__currency)
 
@@ -40,32 +43,59 @@ class Money(object):
     def __mul__(self, other):
         '''
         Multiplies the current money value with the specified other
-        money value. The result will have the currency of the current value.
+        money value.
         '''
         return Money(self.value * other.value / Money.__INTERNAL_FACTOR,
             self.currency, False)
 
+    def __imul__(self, other):
+        '''
+        Multiplies the current money value with the specified other
+        money value (in-place).
+        '''
+        self.__value = self.value * other.value / Money.__INTERNAL_FACTOR
+        return self
+
     def __div__(self, other):
         '''
         Divides the current money value by the specified other money value.
-        The result will have the currency of the current value.
         '''
         return Money(self.value * Money.__INTERNAL_FACTOR / other.value,
             self.currency, False)
 
+    def __idiv__(self, other):
+        '''
+        Divides the current money value by the specified other
+        money value (in-place).
+        '''
+        self.__value = self.value * Money.__INTERNAL_FACTOR / other.value
+        return self
+
     def __add__(self, other):
         '''
         Adds another money value to this one.
-        The resulting money value will have the same type as this one.
         '''
         return Money(self.value + other.value, self.currency, False)
+
+    def __iadd__(self, other):
+        '''
+        Adds another money value to this one (in-place).
+        '''
+        self.__value += other.value
+        return self
 
     def __sub__(self, other):
         '''
         Subtracts another money value from this one.
-        The resulting money value will have the same type as this one.
         '''
         return Money(self.value - other.value, self.currency, False)
+
+    def __isub__(self, other):
+        '''
+        Subtracts another money value from this one (in-place).
+        '''
+        self.__value -= other.value
+        return self
 
     def pip(self):
         '''

@@ -9,6 +9,7 @@ class Currency(object):
     __DECIMALS = {
         'BTC': 8,
         'JPY': 3,
+        'SEK': 3,
         }
 
     def __init__(self, symbol):

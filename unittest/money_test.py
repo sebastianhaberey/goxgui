@@ -39,6 +39,17 @@ class Test(unittest.TestCase):
         self.assertEquals(Currency('BTC'), moneyC.currency)
         self.assertEquals(8, moneyC.decimals)
 
+    def test_multiply_inplace(self):
+
+        moneyA = Money(10.0)
+        moneyB = Money(5.0, Currency('EUR'))
+        moneyA *= moneyB
+
+        # the result should have money A's properties
+        self.assertEquals(5000000000, moneyA.value)
+        self.assertEquals(Currency('BTC'), moneyA.currency)
+        self.assertEquals(8, moneyA.decimals)
+
     def test_divide(self):
 
         moneyA = Money(10.0, Currency('USD'))
@@ -47,6 +58,14 @@ class Test(unittest.TestCase):
 
         self.assertEquals(200000000, moneyC.value)
         self.assertEquals(Currency('USD'), moneyC.currency)
+
+    def test_divide_inplace(self):
+        moneyA = Money(10.0, Currency('USD'))
+        moneyB = Money(5.0)
+        moneyA /= moneyB
+
+        self.assertEquals(200000000, moneyA.value)
+        self.assertEquals(Currency('USD'), moneyA.currency)
 
     def test_add(self):
 
@@ -57,6 +76,15 @@ class Test(unittest.TestCase):
         self.assertEquals(1500000000, moneyC.value)
         self.assertEquals(Currency('USD'), moneyC.currency)
 
+    def test_add_inplace(self):
+
+        moneyA = Money(10.0, Currency('USD'))
+        moneyB = Money(5.0)
+        moneyA += moneyB
+
+        self.assertEquals(1500000000, moneyA.value)
+        self.assertEquals(Currency('USD'), moneyA.currency)
+
     def test_sub(self):
 
         moneyA = Money(10.0, Currency('USD'))
@@ -65,6 +93,15 @@ class Test(unittest.TestCase):
 
         self.assertEquals(500000000, moneyC.value)
         self.assertEquals(Currency('USD'), moneyC.currency)
+
+    def test_sub_inplace(self):
+
+        moneyA = Money(10.0, Currency('USD'))
+        moneyB = Money(5.0)
+        moneyA -= moneyB
+
+        self.assertEquals(500000000, moneyA.value)
+        self.assertEquals(Currency('USD'), moneyA.currency)
 
     def test_to_string(self):
         money = Money(1000, Currency('USD'))
@@ -97,3 +134,4 @@ class Test(unittest.TestCase):
         self.assertEquals('6,666.600', str(money))
         self.assertEquals(Currency('JPY'), money.currency)
         self.assertEquals(3, money.decimals)
+
