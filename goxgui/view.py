@@ -5,25 +5,19 @@ import money
 
 from PyQt4.QtGui import QMainWindow
 from PyQt4.QtGui import QTextCursor
+from PyQt4.QtGui import QHeaderView
 from ui.main_window_ import Ui_MainWindow
-from model import ModelAsk
-from model import ModelBid
+from model import Model
+from orders import Orders
 from PyQt4 import QtGui
 from preferences import Preferences
+from market import Market
 
 
 class View(QMainWindow):
     '''
     Represents the combined view / control.
     '''
-
-    # how the application-proposed bid
-    # will differ from the selected bid (in pips)
-    ADD_TO_BID_PIPS = 1
-
-    # how the application-proposed ask
-    # will differ from the selected ask (in pips)
-    SUB_FROM_ASK_PIPS = 1
 
     def __init__(self, preferences, market):
 
@@ -45,6 +39,7 @@ class View(QMainWindow):
         self.market.signal_wallet.connect(self.display_wallet)
         self.market.signal_orderlag.connect(self.display_orderlag)
         self.market.signal_userorder.connect(self.display_userorder)
+        self.market.signal_ticker.connect(self.update_ticker)
 
         # connect ui signals to our logic
         self.ui.pushButtonGo.released.connect(
@@ -70,12 +65,6 @@ class View(QMainWindow):
         self.ui.actionPreferences_2.triggered.connect(
             self.show_preferences)
 
-        # initialize and connect bid / ask table models
-        self.modelAsk = ModelAsk(self, self.market, preferences)
-        self.ui.tableAsk.setModel(self.modelAsk)
-        self.modelBid = ModelBid(self, self.market, preferences)
-        self.ui.tableBid.setModel(self.modelBid)
-
         # associate log channels with their check boxes
         self.logchannels = [
             [self.ui.checkBoxLogTicker, 'tick'],
@@ -83,8 +72,12 @@ class View(QMainWindow):
             [self.ui.checkBoxLogDepth, 'depth'],
         ]
 
-        # resets dynamic ui elements
-        self.reset()
+        # set correct resizing for the bid and ask tables
+        self.ui.tableAsk.horizontalHeader().setResizeMode(QHeaderView.Stretch)
+        self.ui.tableBid.horizontalHeader().setResizeMode(QHeaderView.Stretch)
+
+        # initializes dynamic ui elements
+        self.init()
 
         # activate market
         self.market.start()
@@ -100,14 +93,33 @@ class View(QMainWindow):
     def get_quote_currency(self):
         return self.preferences.get_currency(Preferences.CURRENCY_INDEX_QUOTE)
 
-    def reset(self):
+    def init(self):
 
         # initialize wallet values
         self.set_wallet_a(None)
         self.set_wallet_b(None)
 
+        # initialize ticker values
+        self.set_ticker_ask(None)
+        self.set_ticker_bid(None)
+
         # adjust decimal values to current currencies
         self.adjust_decimals()
+
+        # set up table models
+        self.init_models()
+
+    def init_models(self):
+
+        self.orders_ask = Orders(self.market, Market.TYPE_ASK,
+            self.preferences.get_grouping())
+        self.model_ask = Model(self, self.orders_ask, self.preferences)
+        self.ui.tableAsk.setModel(self.model_ask)
+
+        self.orders_bid = Orders(self.market, Market.TYPE_BID,
+            self.preferences.get_grouping())
+        self.model_bid = Model(self, self.orders_bid, self.preferences)
+        self.ui.tableBid.setModel(self.model_bid)
 
     def adjust_decimals(self):
         currencyQuote = self.get_quote_currency()
@@ -144,7 +156,7 @@ class View(QMainWindow):
             self.status_message('Preferences changed, restarting market.')
             self.market.stop()
             self.preferences.apply()
-            self.reset()
+            self.init()
             self.market.start()
             self.status_message('Market restarted successfully.')
 
@@ -211,6 +223,24 @@ class View(QMainWindow):
         self.ui.pushButtonWalletB.setText(
             money.to_long_string(value, self.get_quote_currency()))
 
+    def set_ticker_ask(self, value):
+
+        if value == None:
+            self.ui.labelAsk.setText('n/a')
+            return
+
+        self.ui.labelAsk.setText(
+            money.to_long_string(value, self.get_quote_currency()))
+
+    def set_ticker_bid(self, value):
+
+        if value == None:
+            self.ui.labelBid.setText('n/a')
+            return
+
+        self.ui.labelBid.setText(
+            money.to_long_string(value, self.get_quote_currency()))
+
     def get_trade_size(self):
         return money.to_money(self.ui.doubleSpinBoxSize.value())
 
@@ -244,6 +274,11 @@ class View(QMainWindow):
             Preferences.CURRENCY_INDEX_BASE))
         self.set_wallet_b(self.market.get_balance(
             Preferences.CURRENCY_INDEX_QUOTE))
+
+    def update_ticker(self, bid, ask):
+
+        self.set_ticker_bid(bid)
+        self.set_ticker_ask(ask)
 
     def set_trade_size_from_wallet(self):
         self.set_trade_size(
@@ -319,16 +354,18 @@ class View(QMainWindow):
         self.update_price_from_asks(index.row())
 
     def update_price_from_asks(self, row):
-        value = self.modelAsk.get_price(row)
-        pip = money.pip(self.get_quote_currency()) * View.SUB_FROM_ASK_PIPS
+        value = self.orders_ask.get_price(row)
+        pip = money.pip(
+            self.get_quote_currency()) * self.preferences.get_proposed_pips()
         self.set_trade_price(value - pip)
 
     def slot_update_price_from_bids(self, index):
         self.update_price_from_bids(index.row())
 
     def update_price_from_bids(self, row):
-        value = self.modelBid.get_price(row)
-        pip = money.pip(self.get_quote_currency()) * View.SUB_FROM_ASK_PIPS
+        value = self.orders_bid.get_price(row)
+        pip = money.pip(
+            self.get_quote_currency()) * self.preferences.get_proposed_pips()
         self.set_trade_price(value + pip)
 
     def cancel_order(self):

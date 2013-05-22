@@ -17,6 +17,12 @@ class Preferences(QDialog):
     CURRENCY_INDEX_BASE = 1
     CURRENCY_INDEX_QUOTE = 2
 
+    ORDERS_COLUMN_PRICE = 0
+    ORDERS_COLUMN_SIZE = 1
+    ORDERS_COLUMN_QUOTE = 2
+    ORDERS_COLUMN_TOTAL = 3
+    ORDERS_COLUMN_TOTAL_QUOTE = 4
+
     __PASSPHRASE = 'fffuuuuuuu'
     __FILENAME = 'goxgui.ini'
     __SECTION_GLOBAL = 'Global'
@@ -39,14 +45,23 @@ class Preferences(QDialog):
             self.__slot_validate_credentials)
 
         # initialize config parser
-        self.configparser = RawConfigParser()
+        self.__configparser = RawConfigParser({
+            'grouping': '0.0',
+            'currency_{}'.format(Preferences.CURRENCY_INDEX_BASE): 'BTC',
+            'currency_{}'.format(Preferences.CURRENCY_INDEX_QUOTE): 'USD',
+            'orders_column_{}'.format(Preferences.ORDERS_COLUMN_PRICE): 'True',
+            'orders_column_{}'.format(Preferences.ORDERS_COLUMN_SIZE): 'True',
+            'orders_column_{}'.format(Preferences.ORDERS_COLUMN_QUOTE): 'False', # @IgnorePep8
+            'orders_column_{}'.format(Preferences.ORDERS_COLUMN_TOTAL): 'True',
+            'orders_column_{}'.format(Preferences.ORDERS_COLUMN_TOTAL_QUOTE): 'False', # @IgnorePep8
+            'key': '',
+            'secret': '',
+            'proposed_pips': '0'
+        })
 
-        # __load or (if non-existent) create config file
+        # load config file (if exists)
         if path.isfile(self.__FILENAME):
             self.__load()
-        else:
-            self.__init_with_defaults()
-            self.__save()
 
         self.set_fiat_currencies([])
 
@@ -80,7 +95,7 @@ class Preferences(QDialog):
 
     # start private methods
 
-    def get_fiat_currency_index(self, other):
+    def __get_fiat_currency_index(self, other):
         '''
         Returns the index of the given currency in the
         fiat currency list.
@@ -92,26 +107,46 @@ class Preferences(QDialog):
             index += 1
         raise Exception('Currency {} not found.'.format(other.symbol))
 
-    def __init_with_defaults(self):
-        self.configparser.add_section(self.__SECTION_GLOBAL)
-        self.set_currency(Preferences.CURRENCY_INDEX_BASE, Currency('BTC'))
-        self.set_currency(Preferences.CURRENCY_INDEX_QUOTE, Currency('USD'))
-        self.__set_key('')
-        self.__set_secret('')
-
     def __load_to_gui(self):
+        self.__ui.doubleSpinBoxGrouping.setValue(self.get_grouping())
         self.__ui.lineEditKey.setText(self.get_key())
         self.__ui.lineEditSecret.setText(self.get_secret())
         quoteCurrency = self.get_currency(Preferences.CURRENCY_INDEX_QUOTE)
-        index = self.get_fiat_currency_index(quoteCurrency)
+        index = self.__get_fiat_currency_index(quoteCurrency)
         self.__ui.comboBoxCurrency.setCurrentIndex(index)
         self.__set_status('')
+        self.__ui.checkBoxPrice.setChecked(self.is_orders_column_enabled(
+            Preferences.ORDERS_COLUMN_PRICE))
+        self.__ui.checkBoxSize.setChecked(self.is_orders_column_enabled(
+            Preferences.ORDERS_COLUMN_SIZE))
+        self.__ui.checkBoxTotal.setChecked(self.is_orders_column_enabled(
+            Preferences.ORDERS_COLUMN_TOTAL))
+        self.__ui.checkBoxQuote.setChecked(self.is_orders_column_enabled(
+            Preferences.ORDERS_COLUMN_QUOTE))
+        self.__ui.checkBoxTotalQuote.setChecked(self.is_orders_column_enabled(
+            Preferences.ORDERS_COLUMN_TOTAL_QUOTE))
+        self.__ui.doubleSpinBoxOffset.setValue(self.get_proposed_pips())
 
     def __save_from_gui(self):
+        self.set_grouping(self.__ui.doubleSpinBoxGrouping.value())
         self.__set_key(str(self.__ui.lineEditKey.text()))
         self.__set_secret(str(self.__ui.lineEditSecret.text()))
         quoteCurrency = Currency(str(self.__ui.comboBoxCurrency.currentText()))
         self.set_currency(Preferences.CURRENCY_INDEX_QUOTE, quoteCurrency)
+        self.set_orders_column_enabled(Preferences.ORDERS_COLUMN_PRICE,
+            self.__ui.checkBoxPrice.isChecked())
+        self.set_orders_column_enabled(Preferences.ORDERS_COLUMN_SIZE,
+            self.__ui.checkBoxSize.isChecked())
+        self.set_orders_column_enabled(Preferences.ORDERS_COLUMN_TOTAL,
+            self.__ui.checkBoxTotal.isChecked())
+        self.set_orders_column_enabled(Preferences.ORDERS_COLUMN_QUOTE,
+            self.__ui.checkBoxQuote.isChecked())
+        self.set_orders_column_enabled(Preferences.ORDERS_COLUMN_TOTAL_QUOTE,
+            self.__ui.checkBoxTotalQuote.isChecked())
+        self.set_proposed_pips(self.__ui.doubleSpinBoxOffset.value())
+
+    def __has_option(self, option):
+        return self.__configparser.has_option(self.__SECTION_GLOBAL, option)
 
     def __disable_ok(self, text):
         self.__ui.buttonBox.button(QDialogButtonBox.Ok).setEnabled(False)
@@ -126,13 +161,13 @@ class Preferences(QDialog):
         Saves the config to the .ini file
         '''
         with open(self.__FILENAME, 'wb') as configfile:
-            self.configparser.write(configfile)
+            self.__configparser.write(configfile)
 
     def __load(self):
         '''
         Loads or reloads the config from the .ini file
         '''
-        self.configparser.read(self.__FILENAME)
+        self.__configparser.read(self.__FILENAME)
 
     def __set_key(self, key):
         '''
@@ -166,18 +201,21 @@ class Preferences(QDialog):
         self.__ui.labelPassword.setFont(fontB)
         self.__ui.labelKeySecret.setFont(fontB)
         self.__ui.labelCurrency.setFont(fontB)
+        self.__ui.labelColumns.setFont(fontB)
+        self.__ui.labelGrouping.setFont(fontB)
+        self.__ui.labelOffset.setFont(fontB)
 
     def __get(self, key):
         '''
         Retrieves a property from the global section
         '''
-        return self.configparser.get(self.__SECTION_GLOBAL, key)
+        return self.__configparser.get(self.__SECTION_GLOBAL, key)
 
     def __set(self, key, value):
         '''
         Stores a property to the global section
         '''
-        self.configparser.set(self.__SECTION_GLOBAL, key, value)
+        self.__configparser.set(self.__SECTION_GLOBAL, key, value)
 
     # end private methods
 
@@ -196,10 +234,22 @@ class Preferences(QDialog):
             index += 1
 
     def set_currency(self, index, currency):
-        return self.__set('currency_{}'.format(index), currency.symbol)
+        self.__set('currency_{}'.format(index), currency.symbol)
 
     def get_currency(self, index):
         return Currency(self.__get('currency_{}'.format(index)))
+
+    def set_orders_column_enabled(self, column, enabled):
+        self.__set('orders_column_{}'.format(column), str(enabled))
+
+    def is_orders_column_enabled(self, column):
+        return self.__get('orders_column_{}'.format(column)) == 'True'
+
+    def set_proposed_pips(self, pips):
+        self.__set('proposed_pips', str(long(pips)))
+
+    def get_proposed_pips(self):
+        return long(self.__get('proposed_pips'))
 
     def get_key(self):
         '''
@@ -216,6 +266,18 @@ class Preferences(QDialog):
             return secret
 
         return utilities.decrypt(secret, Preferences.__PASSPHRASE)
+
+    def get_grouping(self):
+        '''
+        Loads the grouping size from the configuration file.
+        '''
+        return float(self.__get('grouping'))
+
+    def set_grouping(self, grouping):
+        '''
+        Saves the grouping size into the configuration file.
+        '''
+        return self.__set('grouping', grouping)
 
     def show(self):
         '''

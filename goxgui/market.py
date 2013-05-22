@@ -1,10 +1,8 @@
+from PyQt4.QtCore import QObject, pyqtSignal
+from currency import Currency
+from preferences import Preferences
 import goxapi
 import time
-
-from preferences import Preferences
-from currency import Currency
-from PyQt4.QtCore import QObject
-from PyQt4.QtCore import pyqtSignal
 
 
 class Market(QObject):
@@ -43,16 +41,43 @@ class Market(QObject):
         'SEK': 5,
         }
 
-    # constants to select order type
-    # when querying order book data
-    ORDER_TYPE_BID = 0
-    ORDER_TYPE_ASK = 1
+    # these constants mark the type of orders, trades etc
+    TYPE_BID = 0
+    TYPE_ASK = 1
 
+    # we're using objects as paramters for the signals,
+    # because long integers will cause type errors
+    # (with both type long and type 'long long')
+
+    # log message
     signal_log = pyqtSignal(str)
+
+    # none
     signal_wallet = pyqtSignal()
-    signal_orderlag = pyqtSignal('long long', str)
+
+    # milliseconds
+    signal_orderlag = pyqtSignal(object, str)
+
+    # price, size, order type, order id, status
     signal_userorder = pyqtSignal(object, object, str, str, str)
-    signal_orderbook_changed = pyqtSignal()
+
+    # price, size
+    signal_bid = pyqtSignal(object, object)
+
+    # list of [price, size]
+    signal_bids = pyqtSignal(object)
+
+    # price, size
+    signal_ask = pyqtSignal(object, object)
+
+    # list of [price, size]
+    signal_asks = pyqtSignal(object)
+
+    # bid, ask
+    signal_ticker = pyqtSignal(object, object)
+
+    # price, size, type
+    signal_trade = pyqtSignal(object, object, object)
 
     def __init__(self, preferences):
         QObject.__init__(self)
@@ -85,8 +110,10 @@ class Market(QObject):
         gox.signal_wallet.connect(self.__slot_wallet_changed)
         gox.signal_orderlag.connect(self.__slot_orderlag)
         gox.signal_userorder.connect(self.__slot_userorder)
-        gox.signal_fulldepth.connect(self.__slot_fulldepth)
+        gox.orderbook.signal_fulldepth_processed.connect(self.__slot_fulldepth)
         gox.signal_depth.connect(self.__slot_depth)
+        gox.signal_ticker.connect(self.__slot_ticker)
+        gox.signal_trade.connect(self.__slot_trade)
 
         return gox
 
@@ -110,7 +137,7 @@ class Market(QObject):
         '''
         Converts an external money value into an internal money value.
         '''
-        return value * pow(10, self.__get_currency_shift(index))
+        return long(value) * pow(10, self.__get_currency_shift(index))
 
     def __to_external(self, index, value):
         '''
@@ -122,10 +149,56 @@ class Market(QObject):
         self.signal_log.emit(text)
 
     def __slot_fulldepth(self, dummy, data):
-        self.signal_orderbook_changed.emit()
+        self.signal_bids.emit(self.__convert_orders(self.gox.orderbook.bids))
+        self.signal_asks.emit(self.__convert_orders(self.gox.orderbook.asks))
+
+    def __convert_orders(self, data):
+
+        out = []
+        for i in data:
+            price = self.__to_internal(
+                Preferences.CURRENCY_INDEX_QUOTE, i.price)
+            volume = self.__to_internal(
+                Preferences.CURRENCY_INDEX_BASE, i.volume)
+            out.append([price, volume])
+        return out
+
+    def __slot_ticker(self, dummy, data):
+        (bid, ask) = data
+        bid = self.__to_internal(
+            Preferences.CURRENCY_INDEX_QUOTE, bid)
+        ask = self.__to_internal(
+            Preferences.CURRENCY_INDEX_QUOTE, ask)
+        self.signal_ticker.emit(bid, ask)
+
+    def __slot_trade(self, dummy, data):
+        (dummy_date, price, size, typ, own) = data
+        if (own):
+            return
+
+        price = self.__to_internal(Preferences.CURRENCY_INDEX_QUOTE, price)
+        size = self.__to_internal(Preferences.CURRENCY_INDEX_BASE, size)
+
+        if typ == 'bid':
+            typ = Market.TYPE_BID
+        if typ == 'ask':
+            typ = Market.TYPE_ASK
+
+        self.signal_trade.emit(price, size, typ)
 
     def __slot_depth(self, dummy, data):
-        self.signal_orderbook_changed.emit()
+
+        (typ, price, _voldiff, total_vol) = data
+
+        price = self.__to_internal(
+            Preferences.CURRENCY_INDEX_QUOTE, price)
+        total_vol = self.__to_internal(
+            Preferences.CURRENCY_INDEX_BASE, total_vol)
+
+        if typ == "ask":
+            self.signal_ask.emit(price, total_vol)
+        if typ == "bid":
+            self.signal_bid.emit(price, total_vol)
 
     def __slot_orderlag(self, dummy, (ms, text)):
         self.signal_orderlag.emit(ms, text)
@@ -193,42 +266,3 @@ class Market(QObject):
             return None
 
         return self.__to_internal(index, self.gox.wallet[symbol])
-
-    def get_order(self, typ, index):
-        '''
-        Retrieves the order of the specified type with the specified index.
-        @param typ: ask or bid
-        @param index: the row index
-        '''
-        if typ == Market.ORDER_TYPE_ASK:
-            data = self.gox.orderbook.asks[index]
-        elif typ == Market.ORDER_TYPE_BID:
-            data = self.gox.orderbook.bids[index]
-        else:
-            raise Exception('invalid order type {}'.format(typ))
-
-        price = self.__to_internal(
-            Preferences.CURRENCY_INDEX_QUOTE,
-            int(data.price))
-
-        volume = self.__to_internal(
-            Preferences.CURRENCY_INDEX_BASE,
-            int(data.volume))
-
-        return [price, volume]
-
-    def get_order_count(self, typ):
-        '''
-        Retrieves the amount of orders available of the specified type.
-        @param typ: ask or bid
-        '''
-        if not hasattr(self, 'gox'):
-            return 0
-
-        if typ == Market.ORDER_TYPE_ASK:
-            return len(self.gox.orderbook.asks)
-
-        if typ == Market.ORDER_TYPE_BID:
-            return len(self.gox.orderbook.bids)
-
-        raise Exception('invalid order type {}'.format(typ))
