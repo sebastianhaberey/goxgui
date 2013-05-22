@@ -2,11 +2,11 @@
 <project name="goxgui" basedir=".">
 
 	<!-- Change version number here -->
-	<property name="version" value="1.1.0" />
+	<property name="version" value="1.2.0" />
 	<!-- Change end -->
 
 	<property name="src.dir" location="../" />
-	<property name="build_main.dir" location="./build" />
+	<property name="build.dir" location="./build" />
 	<property name="goxgui.dir" location="${src.dir}/goxgui" />
 	<property name="goxtool.dir" location="${src.dir}/goxtool" />
 	<property name="icon.file" location="${src.dir}/run/bitcoin.png" />
@@ -15,7 +15,7 @@
           target: clean              
          ================================= -->
 	<target name="clean" description="Cleans the build directory">
-		<delete dir="${build_main.dir}" verbose="true" />
+		<delete dir="${build.dir}" verbose="true" />
 	</target>
 
 	<!-- ================================= 
@@ -28,13 +28,37 @@
 		<property name="pyinstaller_script.file" location="/Users/user/Anwendungen/pyinstaller-2.0/pyinstaller.py" />
 		<!-- Change end -->
 
-		<property name="package.name" value="goxgui-${version}-macos-x64" />
-		<property name="build.dir" location="${build_main.dir}/mac" />
-		<property name="package.dir" location="${build.dir}/${package.name}" />
-		<property name="spec_src.file" location="build_mac.spec" />
-		<property name="executable.file" location="${package.dir}/goxgui" />
+		<property name="build.mac.dir" location="${build.dir}/mac" />
+		<property name="package.dir" location="${build.mac.dir}/goxgui-${version}-macos-x64" />
+		<property name="package.file" location="${package.dir}.zip" />
+		<property name="app.file" location="${package.dir}/goxgui.app" />
+		
+		
+		<mkdir dir="${build.dir}" />
 
-		<antcall target="build" />
+		<property name="spec.file" location="${build.mac.dir}/build.spec" />
+		<copy file="build_mac.spec" tofile="${spec.file}" verbose="true" />
+
+		<replace file="${spec.file}">
+			<replacefilter token="@goxgui.dir@" value="${goxgui.dir}" />
+			<replacefilter token="@goxtool.dir@" value="${goxtool.dir}" />
+			<replacefilter token="@executable.file@" value="${build.mac.dir}/goxgui" />
+			<replacefilter token="@icon.file@" value="${icon.file}" />
+			<replacefilter token="@app.file@" value="${app.file}" />
+		</replace>
+		
+		<exec executable="${python_executable.file}">
+			<arg value="${pyinstaller_script.file}" />
+			<arg value="${spec.file}" />
+		</exec>
+
+		<!-- Hack to include mac icon into package, currently not supported by pyinstaller,
+		     see http://www.pyinstaller.org/export/v2.0/project/doc/Manual.html?format=raw#spec-files -->
+		<copy file="${src.dir}/run/bitcoin.icns" tofile="${app.file}/Contents/Resources/icon-windowed.icns" overwrite="true" verbose="true" />
+
+		<zip destfile="${package.file}">
+			<zipfileset dir="${package.dir}" filemode="755" />
+		</zip>
 
 	</target>
 
@@ -48,25 +72,15 @@
 		<property name="pyinstaller_script.file" value="C:/Programme/Tools/pyinstaller-2.0/utils/Build.py" />
 		<!-- Change end -->
 
-		<property name="package.name" value="goxgui-${version}-win-x86" />
-		<property name="build.dir" location="${build_main.dir}/win" />
-		<property name="package.dir" location="${build.dir}/${package.name}" />
-		<property name="spec_src.file" location="build_win.spec" />
-		<property name="executable.file" location="${package.dir}/goxgui.exe" />
-
-		<antcall target="build" />
-
-	</target>
-
-	<!-- - - - - - - - - - - - - - - - - - 
-          target: build                      
-         - - - - - - - - - - - - - - - - - -->
-	<target name="build">
+		<property name="build.win.dir" location="${build.dir}/win" />
+		<property name="package.dir" location="${build.win.dir}/goxgui-${version}-win-x86" />
+		<property name="package.file" location="${package.dir}.zip" />
+		<property name="executable.file" location="${package.dir}/${application.name}.exe" />
 
 		<mkdir dir="${build.dir}" />
 
-		<property name="spec.file" location="${build.dir}/build.spec" />
-		<copy file="${spec_src.file}" tofile="${spec.file}" verbose="true" />
+		<property name="spec.file" location="${build.win.dir}/build.spec" />
+		<copy file="build_win.spec" tofile="${spec.file}" verbose="true" />
 
 		<replace file="${spec.file}">
 			<replacefilter token="@goxgui.dir@" value="${goxgui.dir}" />
@@ -83,12 +97,10 @@
 			<arg value="${spec.file}" />
 		</exec>
 
-		<property name="package.file" location="${build.dir}/${package.name}.zip" />
-
 		<zip destfile="${package.file}">
 			<zipfileset dir="${package.dir}" filemode="755" />
 		</zip>
-
+		
 	</target>
 
 </project>

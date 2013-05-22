@@ -22,3 +22,8 @@ exe = EXE(pyz,
           strip=None,
           upx=True,
           console=False)
+
+app = BUNDLE(exe,
+             name='@app.file@',
+             version=1)
+          

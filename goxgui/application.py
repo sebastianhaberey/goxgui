@@ -21,16 +21,15 @@
 
 '''
 
-import logging
-import sys
-import utilities
-
-from PyQt4.QtGui import QIcon
-from PyQt4.QtGui import QApplication
 from PyQt4.QtCore import SIGNAL
-from view import View
+from PyQt4.QtGui import QApplication, QIcon
 from market import Market
 from preferences import Preferences
+from view import View
+import logging
+import sys
+import traceback
+import utilities
 
 
 class Application(QApplication):
@@ -64,6 +63,11 @@ class Application(QApplication):
 
 
 if __name__ == '__main__':
-    app = Application(sys.argv)
-    app.setWindowIcon(QIcon(utilities.resource_path('bitcoin.png')))
-    app.exec_()
+    try:
+        app = Application(sys.argv)
+        app.setWindowIcon(QIcon(utilities.resource_path('bitcoin.png')))
+        app.exec_()
+    except Exception as e:
+        logging.error('Caught exception in main method.')
+        logging.error(traceback.format_exc())
+        raise

@@ -24,7 +24,7 @@ class Preferences(QDialog):
     ORDERS_COLUMN_TOTAL_QUOTE = 4
 
     __PASSPHRASE = 'fffuuuuuuu'
-    __FILENAME = 'goxgui.ini'
+    __FILENAME = utilities.resource_path('goxgui.ini')
     __SECTION_GLOBAL = 'Global'
 
     def __init__(self):
@@ -62,6 +62,9 @@ class Preferences(QDialog):
         # load config file (if exists)
         if path.isfile(self.__FILENAME):
             self.__load()
+        else:
+            self.__configparser.add_section(self.__SECTION_GLOBAL)
+            self.__save()
 
         self.set_fiat_currencies([])
 
