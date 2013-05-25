@@ -2,7 +2,7 @@
 <project name="goxgui" basedir=".">
 
 	<!-- Change version number here -->
-	<property name="version" value="1.2.0" />
+	<property name="version" value="1.2.1" />
 	<!-- Change end -->
 
 	<property name="src.dir" location="../" />
