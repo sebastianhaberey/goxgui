@@ -7,6 +7,9 @@ import os
 import platform
 
 
+platform_string = None
+
+
 def encrypt(secret, password):
     '''
     Encrypts the specified secret using the specified password.
@@ -90,8 +93,16 @@ def resource_path(relative_path):
     return os.path.join(base_path, relative_path)
 
 
+def get_platform():
+    global platform_string
+    if platform_string == None:
+        platform_string = platform.system()
+
+    return platform_string
+
+
 def platform_is_mac():
     '''
     Returns true if the current platform is mac.
     '''
-    return platform.system() == 'Darwin'
+    return get_platform() == 'Darwin'

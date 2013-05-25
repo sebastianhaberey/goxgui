@@ -45,7 +45,7 @@ class Application(QApplication):
         # initialize logging
         logging.basicConfig(filename='log.txt', level=logging.INFO,
             format='%(asctime)s %(message)s')
-        logging.info("Starting application.")
+        logging.info('Starting application.')
 
         # initialize user preferences
         preferences = Preferences()
@@ -63,11 +63,14 @@ class Application(QApplication):
 
 
 if __name__ == '__main__':
+
     try:
+
+        test = utilities.get_platform()
         app = Application(sys.argv)
         app.setWindowIcon(QIcon(utilities.resource_path('bitcoin.png')))
         app.exec_()
+
     except Exception as e:
-        logging.error('Caught exception in main method.')
         logging.error(traceback.format_exc())
         raise
