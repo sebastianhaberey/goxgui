@@ -24,7 +24,7 @@ class Preferences(QDialog):
     ORDERS_COLUMN_TOTAL_QUOTE = 4
 
     __PASSPHRASE = 'fffuuuuuuu'
-    __FILENAME = utilities.resource_path('goxgui.ini')
+    __FILENAME = 'goxgui.ini'
     __SECTION_GLOBAL = 'Global'
 
     def __init__(self):
