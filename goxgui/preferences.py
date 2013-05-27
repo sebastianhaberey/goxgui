@@ -19,8 +19,8 @@ class Preferences(QDialog):
 
     ORDERS_COLUMN_PRICE = 0
     ORDERS_COLUMN_SIZE = 1
-    ORDERS_COLUMN_QUOTE = 2
-    ORDERS_COLUMN_TOTAL = 3
+    ORDERS_COLUMN_TOTAL_SIZE = 2
+    ORDERS_COLUMN_QUOTE = 3
     ORDERS_COLUMN_TOTAL_QUOTE = 4
 
     __PASSPHRASE = 'fffuuuuuuu'
@@ -52,7 +52,7 @@ class Preferences(QDialog):
             'orders_column_{}'.format(Preferences.ORDERS_COLUMN_PRICE): 'True',
             'orders_column_{}'.format(Preferences.ORDERS_COLUMN_SIZE): 'True',
             'orders_column_{}'.format(Preferences.ORDERS_COLUMN_QUOTE): 'False', # @IgnorePep8
-            'orders_column_{}'.format(Preferences.ORDERS_COLUMN_TOTAL): 'True',
+            'orders_column_{}'.format(Preferences.ORDERS_COLUMN_TOTAL_SIZE): 'True',
             'orders_column_{}'.format(Preferences.ORDERS_COLUMN_TOTAL_QUOTE): 'False', # @IgnorePep8
             'key': '',
             'secret': '',
@@ -122,8 +122,8 @@ class Preferences(QDialog):
             Preferences.ORDERS_COLUMN_PRICE))
         self.__ui.checkBoxSize.setChecked(self.is_orders_column_enabled(
             Preferences.ORDERS_COLUMN_SIZE))
-        self.__ui.checkBoxTotal.setChecked(self.is_orders_column_enabled(
-            Preferences.ORDERS_COLUMN_TOTAL))
+        self.__ui.checkBoxTotalSize.setChecked(self.is_orders_column_enabled(
+            Preferences.ORDERS_COLUMN_TOTAL_SIZE))
         self.__ui.checkBoxQuote.setChecked(self.is_orders_column_enabled(
             Preferences.ORDERS_COLUMN_QUOTE))
         self.__ui.checkBoxTotalQuote.setChecked(self.is_orders_column_enabled(
@@ -140,7 +140,7 @@ class Preferences(QDialog):
             self.__ui.checkBoxPrice.isChecked())
         self.set_orders_column_enabled(Preferences.ORDERS_COLUMN_SIZE,
             self.__ui.checkBoxSize.isChecked())
-        self.set_orders_column_enabled(Preferences.ORDERS_COLUMN_TOTAL,
+        self.set_orders_column_enabled(Preferences.ORDERS_COLUMN_TOTAL_SIZE,
             self.__ui.checkBoxTotal.isChecked())
         self.set_orders_column_enabled(Preferences.ORDERS_COLUMN_QUOTE,
             self.__ui.checkBoxQuote.isChecked())

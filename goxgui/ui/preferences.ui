@@ -35,7 +35,7 @@
    <item row="0" column="0">
     <widget class="QTabWidget" name="tabWidget">
      <property name="currentIndex">
-      <number>1</number>
+      <number>2</number>
      </property>
      <widget class="QWidget" name="tabCurrency">
       <attribute name="title">
@@ -253,7 +253,14 @@
        <string>Order Book</string>
       </attribute>
       <layout class="QGridLayout" name="gridLayout_3">
-       <item row="12" column="1">
+       <item row="10" column="0" colspan="3">
+        <widget class="Line" name="line_2">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+        </widget>
+       </item>
+       <item row="13" column="1">
         <spacer name="verticalSpacer_2">
          <property name="orientation">
           <enum>Qt::Vertical</enum>
@@ -266,7 +273,7 @@
          </property>
         </spacer>
        </item>
-       <item row="11" column="1">
+       <item row="12" column="1">
         <widget class="QDoubleSpinBox" name="doubleSpinBoxOffset">
          <property name="decimals">
           <number>0</number>
@@ -276,7 +283,7 @@
          </property>
         </widget>
        </item>
-       <item row="11" column="0">
+       <item row="12" column="0">
         <widget class="QLabel" name="label_5">
          <property name="text">
           <string>Offset:</string>
@@ -299,13 +306,6 @@
          </property>
         </spacer>
        </item>
-       <item row="9" column="0" colspan="3">
-        <widget class="Line" name="line_2">
-         <property name="orientation">
-          <enum>Qt::Horizontal</enum>
-         </property>
-        </widget>
-       </item>
        <item row="4" column="0">
         <widget class="QLabel" name="label_8">
          <property name="minimumSize">
@@ -322,7 +322,7 @@
          </property>
         </widget>
        </item>
-       <item row="8" column="1">
+       <item row="9" column="1">
         <widget class="QCheckBox" name="checkBoxTotalQuote">
          <property name="text">
           <string>Total Quote</string>
@@ -385,7 +385,7 @@
          </property>
         </widget>
        </item>
-       <item row="6" column="1">
+       <item row="7" column="1">
         <widget class="QCheckBox" name="checkBoxQuote">
          <property name="text">
           <string>Quote</string>
@@ -415,17 +415,17 @@
          </property>
         </widget>
        </item>
-       <item row="7" column="1">
-        <widget class="QCheckBox" name="checkBoxTotal">
-         <property name="text">
-          <string>Total</string>
-         </property>
-        </widget>
-       </item>
-       <item row="10" column="1">
+       <item row="11" column="1">
         <widget class="QLabel" name="labelOffset">
          <property name="text">
           <string>Pips to add / subtract to proposed price when clicking order book</string>
+         </property>
+        </widget>
+       </item>
+       <item row="6" column="1">
+        <widget class="QCheckBox" name="checkBoxTotalSize">
+         <property name="text">
+          <string>Total Size</string>
          </property>
         </widget>
        </item>

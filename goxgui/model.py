@@ -58,20 +58,20 @@ class Model(QAbstractTableModel):
                 [self.__orders.get_volume(index), self.__base_currency])
 
         if preferences.is_orders_column_enabled(
+            Preferences.ORDERS_COLUMN_TOTAL_SIZE):
+
+            headers.append('Total {}'.format(
+                self.__base_currency.symbol))
+            getters.append(lambda index:
+                [self.__orders.get_total(index), self.__base_currency])
+
+        if preferences.is_orders_column_enabled(
             Preferences.ORDERS_COLUMN_QUOTE):
 
             headers.append('Quote {}'.format(
                 self.__quote_currency.symbol))
             getters.append(lambda index:
                 [self.__orders.get_quote(index), self.__quote_currency])
-
-        if preferences.is_orders_column_enabled(
-            Preferences.ORDERS_COLUMN_TOTAL):
-
-            headers.append('Total {}'.format(
-                self.__base_currency.symbol))
-            getters.append(lambda index:
-                [self.__orders.get_total(index), self.__base_currency])
 
         if preferences.is_orders_column_enabled(
             Preferences.ORDERS_COLUMN_TOTAL_QUOTE):
