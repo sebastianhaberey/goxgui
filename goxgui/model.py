@@ -60,7 +60,7 @@ class Model(QAbstractTableModel):
         if preferences.is_orders_column_enabled(
             Preferences.ORDERS_COLUMN_TOTAL_SIZE):
 
-            headers.append('Total {}'.format(
+            headers.append('Total Size {}'.format(
                 self.__base_currency.symbol))
             getters.append(lambda index:
                 [self.__orders.get_total(index), self.__base_currency])

@@ -141,7 +141,7 @@ class Preferences(QDialog):
         self.set_orders_column_enabled(Preferences.ORDERS_COLUMN_SIZE,
             self.__ui.checkBoxSize.isChecked())
         self.set_orders_column_enabled(Preferences.ORDERS_COLUMN_TOTAL_SIZE,
-            self.__ui.checkBoxTotal.isChecked())
+            self.__ui.checkBoxTotalSize.isChecked())
         self.set_orders_column_enabled(Preferences.ORDERS_COLUMN_QUOTE,
             self.__ui.checkBoxQuote.isChecked())
         self.set_orders_column_enabled(Preferences.ORDERS_COLUMN_TOTAL_QUOTE,
