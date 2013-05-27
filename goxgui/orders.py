@@ -75,6 +75,8 @@ class Orders(QObject):
         else:
             self.__delete_all(ask)
 
+        self.__recalculate_totals(0)
+
         self.signal_changed.emit()
 
     def __update(self, price, volume):
