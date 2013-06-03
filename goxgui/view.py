@@ -12,6 +12,7 @@ from orders import Orders
 from PyQt4 import QtGui
 from preferences import Preferences
 from market import Market
+from info import Info
 
 
 class View(QMainWindow):
@@ -52,10 +53,6 @@ class View(QMainWindow):
             self.cancel_order)
         self.ui.textBrowserStatus.anchorClicked.connect(
             self.order_selected)
-        self.ui.pushButtonWalletA.released.connect(
-            self.set_trade_size_from_wallet)
-        self.ui.pushButtonWalletB.released.connect(
-            self.set_trade_total_from_wallet)
         self.ui.pushButtonSize.released.connect(
             self.recalculate_size)
         self.ui.pushButtonPrice.released.connect(
@@ -75,6 +72,17 @@ class View(QMainWindow):
         # set correct resizing for the bid and ask tables
         self.ui.tableAsk.horizontalHeader().setResizeMode(QHeaderView.Stretch)
         self.ui.tableBid.horizontalHeader().setResizeMode(QHeaderView.Stretch)
+
+        # set up info table
+        self.info = Info(self, self.preferences, self.ui.tableInfo.clicked)
+        self.ui.tableInfo.setModel(self.info)
+        self.ui.tableInfo.horizontalHeader().setResizeMode(QHeaderView.Stretch)
+
+        # connect to signals from info table
+        self.info.signal_base_balance_clicked.connect(
+            self.set_trade_size_from_wallet)
+        self.info.signal_quote_balance_clicked.connect(
+            self.set_trade_total_from_wallet)
 
         # initializes dynamic ui elements
         self.init()
@@ -96,12 +104,12 @@ class View(QMainWindow):
     def init(self):
 
         # initialize wallet values
-        self.set_wallet_a(None)
-        self.set_wallet_b(None)
+        self.info.set_wallet_a(None)
+        self.info.set_wallet_b(None)
 
         # initialize ticker values
-        self.set_ticker_ask(None)
-        self.set_ticker_bid(None)
+        self.info.set_ticker_ask(None)
+        self.info.set_ticker_bid(None)
 
         # adjust decimal values to current currencies
         self.adjust_decimals()
@@ -136,6 +144,7 @@ class View(QMainWindow):
         font = QtGui.QFont('Monaco', 11)
         self.ui.tableAsk.setFont(font)
         self.ui.tableBid.setFont(font)
+        self.ui.tableInfo.setFont(font)
         self.ui.textBrowserLog.setFont(font)
         self.ui.textBrowserStatus.setFont(font)
         self.ui.lineEditOrder.setFont(font)
@@ -201,46 +210,6 @@ class View(QMainWindow):
         self.ui.textBrowserStatus.moveCursor(QTextCursor.End)
         self.ui.textBrowserStatus.append(text)
 
-    def set_wallet_a(self, value):
-
-        if value == None:
-            self.ui.pushButtonWalletA.setEnabled(False)
-            self.ui.pushButtonWalletA.setText('n/a')
-            return
-
-        self.ui.pushButtonWalletA.setEnabled(True)
-        self.ui.pushButtonWalletA.setText(
-            money.to_long_string(value, self.get_base_currency()))
-
-    def set_wallet_b(self, value):
-
-        if value == None:
-            self.ui.pushButtonWalletB.setEnabled(False)
-            self.ui.pushButtonWalletB.setText('n/a')
-            return
-
-        self.ui.pushButtonWalletB.setEnabled(True)
-        self.ui.pushButtonWalletB.setText(
-            money.to_long_string(value, self.get_quote_currency()))
-
-    def set_ticker_ask(self, value):
-
-        if value == None:
-            self.ui.labelAsk.setText('n/a')
-            return
-
-        self.ui.labelAsk.setText(
-            money.to_long_string(value, self.get_quote_currency()))
-
-    def set_ticker_bid(self, value):
-
-        if value == None:
-            self.ui.labelBid.setText('n/a')
-            return
-
-        self.ui.labelBid.setText(
-            money.to_long_string(value, self.get_quote_currency()))
-
     def get_trade_size(self):
         return money.to_money(self.ui.doubleSpinBoxSize.value())
 
@@ -270,15 +239,15 @@ class View(QMainWindow):
 
     def display_wallet(self):
 
-        self.set_wallet_a(self.market.get_balance(
+        self.info.set_wallet_a(self.market.get_balance(
             Preferences.CURRENCY_INDEX_BASE))
-        self.set_wallet_b(self.market.get_balance(
+        self.info.set_wallet_b(self.market.get_balance(
             Preferences.CURRENCY_INDEX_QUOTE))
 
     def update_ticker(self, bid, ask):
 
-        self.set_ticker_bid(bid)
-        self.set_ticker_ask(ask)
+        self.info.set_ticker_bid(bid)
+        self.info.set_ticker_ask(ask)
 
     def set_trade_size_from_wallet(self):
         self.set_trade_size(
@@ -291,7 +260,7 @@ class View(QMainWindow):
         self.set_selected_trade_type('BUY')
 
     def display_orderlag(self, ms, text):
-        self.ui.labelOrderlag.setText('Trading Lag: ' + text)
+        self.info.set_orderlag(ms)
 
     def execute_trade(self):
 
